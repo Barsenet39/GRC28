@@ -1,0 +1,319 @@
+/* Sidebar */ 
+.sidebar { 
+ 
+  position: fixed; 
+  top: 60px; /* Sidebar starts below the header */ 
+  left: 0; 
+  padding: 40px; 
+  width: 250px; 
+  height: calc(100vh - 80px); /* Full height minus the header height */ 
+  background-color: #fff; 
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05); 
+  transition: transform 0.3s ease; 
+  z-index: 10; /* Ensure sidebar is above the content */ 
+ 
+
+} 
+ 
+
+/* Sidebar always visible on large screens */
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0); /* Sidebar is always visible */
+  }
+}
+
+/* Make the sidebar hidden on small screens initially */
+@media (max-width: 767px) {
+  .sidebar {
+    transform: translateX(-100%); /* Hide sidebar off-screen */
+  }
+
+  .sidebarVisible {
+    transform: translateX(0); /* Sidebar visible when toggled */
+  }
+}
+
+.navItem {
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 20px;
+  position: relative;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  margin-left: 10px;
+}
+.navLink:hover {
+  color: #105485;  /* Blue color on hover */
+  background-color: #e0f7ff;  /* Light blue background on hover */
+}
+/* Icon styles */
+
+.notificationBadge {
+  position: absolute;
+  top: -5px;
+  right: 20px;
+  background-color: #f44336; /* Red color for notification */
+  color: white;
+  padding: 2px 6px;
+  border-radius: 45%;
+  font-size: 14px;
+  width: 20px;
+}
+
+.icon {
+  font-size: 20px;
+  margin-right: 10px;
+  width: 35px;
+  height: 35px;
+  color: #1789DC; /* Set icons to blue */
+} 
+
+.icon:hover {
+  color: #0070f3; /* Optional hover effect */
+}
+.icon1 {
+  font-size: 1.5rem;
+}
+
+.arrowIcon {
+  transition: transform 0.3s;
+}
+
+.rotateArrow {
+  transform: rotate(180deg);
+}
+
+.subOptions {
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+.subOption {
+  padding: 5px 0;
+}
+
+/* Main content adjustments */
+.mainContent {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+  padding-left: 250px; /* Content padding to avoid overlap with sidebar */
+}
+
+/* Hamburger icon */
+.hamburgerIcon {
+  display: none; /* Hide by default */
+  font-size: 2rem;
+  cursor: pointer;
+  margin-right: 20px; /* Spacing */
+}
+
+/* Show hamburger icon on small screens only */
+@media (max-width: 767px) {
+  .hamburgerIcon {
+    display: block;
+  }
+
+  .mainContent {
+    padding-left: 0; /* No padding on small screens */
+  }
+}
+
+ /* Header styles */
+ .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  width: 100%;
+  height: 8%;
+  top: 0;
+  left: 0;
+  z-index: 20;
+}
+
+/* Left section of the header */
+.left {
+  display: flex;
+  align-items: center;
+}
+
+ /* Right section of the header (icons and pie chart) */
+ .right {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adds gap of 10px between items */
+  position: absolute;
+  right: 80px;
+  top: 35px; /* Positioning icons and username 25px from the top */
+}
+
+
+.left, .right {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  font-size: 20px;
+  margin-left: 20px;
+}
+
+.username {
+  font-size: 16px;
+  margin-left: 10px;
+}
+.logo {
+  width: 80px;
+  height: 80px;
+}
+
+/* box1 styles */
+.box1 {
+  position: relative;
+  z-index: 2;
+  background-color: #fff;
+  border-radius: 30px;
+  padding: 10px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
+  margin: 15% auto; /* Centered margin */
+  width: 70%;
+  margin-top: 5%;
+  height: auto;
+  box-sizing: border-box;
+  display: flex; /* Ensure that flexbox is used */
+  justify-content: space-evenly; /* Evenly space out the circles horizontally */
+  gap: 10px; /* Optional: reduce gap between circles */
+}
+
+
+@media (max-width: 768px) { /* Tablet */
+  .box1 {
+    margin-top: 10%;
+    padding: 15px;
+    border-radius: 20px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) { /* Mobile */
+  .box1 {
+    margin-top: 12%;
+    padding: 10px;
+    border-radius: 15px;
+    max-width: 100%;
+  }
+}
+
+.box2 {
+  position: relative;
+  z-index: 2;
+  background-color: #fff;
+  border-radius: 30px;
+  padding: 20px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
+  margin: 5% auto; /* Centered margin, adjusts for all sizes */
+  width: 80%;
+  height: 60%;
+  box-sizing: border-box;
+  margin-top: -12%;
+}
+
+@media (max-width: 768px) { /* Tablet */
+  .box2 {
+    margin-top: 10%;
+    padding: 15px;
+    border-radius: 20px;
+    max-width: 95%;
+  }
+}
+
+@media (max-width: 480px) { /* Mobile */
+  .box2 {
+    margin-top: 12%;
+    padding: 10px;
+    border-radius: 15px;
+    max-width: 100%;
+  }
+}
+
+/* Corner Boxes */
+.cornerBox {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background-color: #f0f0f0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.topLeft {
+  top: 10px;
+  left: 10px;
+}
+
+.topRight {
+  top: 10px;
+  right: 10px;
+}
+
+.bottomLeft {
+  bottom: 10px;
+  left: 10px;
+}
+
+.bottomRight {
+  bottom: 10px;
+  right: 10px;
+}
+
+/* Box Styles */
+.box2 {
+  position: relative;
+  z-index: 2;
+  background-color: #fff;
+  border-radius: 30px;
+  padding: 20px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
+  margin: 5% auto;
+  width: 80%;
+  height: 60%;
+  box-sizing: border-box;
+  margin-top: -12%;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Center the content inside */
+}
+
+
+@media (max-width: 1024px) {
+  .box2 {
+    padding: 5px; /* Reduce padding on smaller screens */
+    width: 80%; /* Increase width to 90% on tablets */
+    height: auto; /* Let height adjust automatically */
+  }
+}
+
+@media (max-width: 768px) {
+  .box2 {
+    padding: 5px; /* Further reduce padding on mobile screens */
+    width: 80%; /* Take up the full width on smaller screens */
+    height: auto; /* Let height adjust automatically */
+  }
+}
+
