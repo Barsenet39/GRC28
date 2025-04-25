@@ -1,136 +1,136 @@
-"use client"; // Required for interactive client-side components
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const View = () => {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleGetStarted = () => {
-    router.push("/signin"); // Redirect to the SignIn page
-  };
-
-  const handleSignUp = () => {
-    router.push("/sign-up"); // Redirect to the SignUp page
-  };
+  const handleGetStarted = () => router.push("/signin");
+  const handleSignUp    = () => router.push("/sign-up");
 
   return (
-    <header className="bg-white border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4">
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70">
+      <div className="container mx-auto px-4 md:px-8 lg:px-16">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <img 
-              src="./logo.png" // Replace with your logo URL
+            <img
+              src="/logo.png"
               alt="Logo"
-              className="h-12 w-auto"
+              className="h-10 md:h-12 w-auto"
             />
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/" className="nav-link">Home</a>
-            <a href="#services" className="nav-link">Service</a>
-            <a href="#how-to-apply" className="nav-link">Help</a>
-            <a href="#contact" className="nav-link">Contact</a>
-            <a href="/Requests" className="nav-link">Requests</a> {/* Added Requests link */}
+            {[
+              ["Home",    "/"],
+              ["Service", "#services"],
+              ["Help",    "#how-to-apply"],
+              ["Contact", "#contact"],
+              ["Requests","/requests"],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="relative nav-link text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                {label}
+                <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-purple-600 transition-all group-hover:w-full"></span>
+              </a>
+            ))}
           </nav>
 
-          {/* Desktop CTA Buttons */}
+          {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button 
-              onClick={handleGetStarted} // Redirect to SignIn
-              className="btn-primary"
+            <button
+              onClick={handleGetStarted}
+              className="btn-primary bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full shadow-sm transition"
             >
               Get Started
             </button>
-            <button 
+            <button
               onClick={handleSignUp}
-              className="btn-secondary"
+              className="btn-secondary border border-purple-600 text-purple-600 px-5 py-2 rounded-full hover:bg-purple-50 transition"
             >
               Sign Up
             </button>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Toggle */}
           <div className="md:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-accent focus:outline-none"
+              onClick={() => setIsMenuOpen((o) => !o)}
+              className="p-2 rounded-md text-gray-600 hover:text-purple-600 transition"
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
+              <motion.svg
+                className="w-6 h-6"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                fill="none"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ rotate: 0 }}
+                animate={{ rotate: isMenuOpen ? 45 : 0 }}
               >
                 {isMenuOpen ? (
                   <path d="M6 18L18 6M6 6l12 12" />
                 ) : (
                   <path d="M4 6h16M4 12h16M4 18h16" />
                 )}
-              </svg>
+              </motion.svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-4">
-              <div className="flex justify-between items-center px-4">
-                <div className="flex-shrink-0">
-                  <img 
-                    src="./logo.png" // Replace with your logo URL
-                    alt="Logo"
-                    className="h-8 w-auto"
-                  />
-                </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-accent focus:outline-none"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ ease: "easeInOut", duration: 0.3 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="flex flex-col px-4 pb-4 space-y-3 border-t border-gray-200">
+                {[
+                  ["Home",    "/"],
+                  ["Service", "#services"],
+                  ["Help",    "#how-to-apply"],
+                  ["Contact", "#contact"],
+                  ["Requests","/requests"],
+                ].map(([label, href]) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="py-2 text-gray-700 hover:text-purple-600 transition-colors"
                   >
-                    <path d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex flex-col space-y-4">
-                <a href="/" className="nav-link px-4 py-2">Home</a>
-                <a href="#services" className="nav-link px-4 py-2">Service</a>
-                <a href="#how-to-apply" className="nav-link px-4 py-2">Help</a>
-                <a href="#contact" className="nav-link px-4 py-2">Contact</a>
-                <a href="/requests" className="nav-link px-4 py-2">Requests</a> {/* Added Requests link */}
-                <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-border">
-                  <button 
+                    {label}
+                  </a>
+                ))}
+                <div className="pt-4 space-y-2">
+                  <button
                     onClick={handleGetStarted}
-                    className="btn-primary w-full"
+                    className="w-full btn-primary bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full"
                   >
                     Get Started
                   </button>
-                  <button 
+                  <button
                     onClick={handleSignUp}
-                    className="btn-secondary w-full"
+                    className="w-full btn-secondary border border-purple-600 text-purple-600 px-4 py-2 rounded-full hover:bg-purple-50"
                   >
                     Sign Up
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );
