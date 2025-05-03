@@ -1,16 +1,16 @@
-// src/app/signup/page.js
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Make sure you are using this import correctly
+import { useRouter } from "next/navigation";
 import axios from 'axios';
+import { FaUser, FaBuilding, FaEnvelope, FaPhone, FaLock, FaIdCard } from 'react-icons/fa';  // Importing icons
 
-const SignupPage = () => { // Ensure the component name is capitalized (React convention)
-  const router = useRouter(); // Call this inside the component function
+const SignupPage = () => {
+  const router = useRouter();
   const [successMessage, setSuccessMessage] = useState('');
-
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
-    organization: '',
+    companyName: '',
     email: '',
     phone: '',
     password: '',
@@ -26,162 +26,188 @@ const SignupPage = () => { // Ensure the component name is capitalized (React co
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Send data to the backend using axios or fetch
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('❌ Passwords do not match.');
+      return;
+    }
+
     axios.post('http://localhost:5000/api/signup', formData)
-    .then((response) => {
-      console.log('Signup successful', response.data);
-      setSuccessMessage('🎉 You have signed up successfully!');
-    })
-    .catch((error) => {
-      console.error('There was an error!', error.response); // Log the full error response
-      if (error.response) {
-        // Log the error details from the server
-        console.log('Error Response:', error.response.data);
-        setSuccessMessage(`❌ ${error.response.data.message || 'There was a problem with signup. Please try again.'}`);
-      } else {
-        // If no response is received
-        setSuccessMessage('❌ Network error. Please try again later.');
-      }
-    });
-  
+      .then((response) => {
+        // Store the first letter of full name in localStorage
+        localStorage.setItem('companyName', formData.companyName);
+        localStorage.setItem('firstLetter', formData.fullName.charAt(0).toUpperCase());
+        setSuccessMessage('🎉 You have signed up successfully!');
+        setErrorMessage('');
+        router.push("/");  // Navigate to the home page after successful signup
+      })
+      .catch((error) => {
+        console.error('There was an error!', error.response);
+        setErrorMessage(error.response?.data?.message || '❌ There was a problem with signup. Please try again.');
+        setSuccessMessage('');
+      });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div 
-        className="rounded-lg shadow-lg p-8 w-full max-w-4xl mt-8" 
-        style={{
-          backgroundImage: 'url("/backgroundimage1.png")', // Use url() for background image
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
-        <div className="flex flex-col items-center mb-6">
-          <img 
-            src="/logo.png" // Replace with your logo URL
-            alt="Logo"
-            className="mb-2"
-          />
-          <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="relative rounded-lg shadow-xl p-8 w-full max-w-4xl bg-white border border-gray-200">
+        <div className="text-center mb-6">
+          <div className="flex justify-center items-center mb-4">
+            <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain mr-2" />
+            <h2 className="text-2xl font-semibold text-gray-800 mb-0">Create Your Account</h2>
+          </div>
+          <p className="text-lg text-gray-600 mb-4">Please enter your details to sign up.</p>
         </div>
-        <p className="text-center mb-4 text-gray-700">Please enter your details.</p>
-        <form onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="fullName">Full Name</label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="fullName">Full Name</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaUser className="text-gray-500 mr-3" />
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="organization">Name of Organization</label>
-              <input
-                type="text"
-                id="organization"
-                name="organization"
-                value={formData.organization}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="companyName">Company Name</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaBuilding className="text-gray-500 mr-3" />
+                <input
+                  type="text"
+                  id="companyName"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="email">Email Address</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaEnvelope className="text-gray-500 mr-3" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="phone">Company Phone</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="phone">Phone Number</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaPhone className="text-gray-500 mr-3" />
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="password">New Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="password">Password</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaLock className="text-gray-500 mr-3" />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="confirmPassword">Confirm Password</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaLock className="text-gray-500 mr-3" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="tinNumber">Tin Number</label>
-              <input
-                type="text"
-                id="tinNumber"
-                name="tinNumber"
-                value={formData.tinNumber}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              />
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="tinNumber">TIN Number</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaIdCard className="text-gray-500 mr-3" />
+                <input
+                  type="text"
+                  id="tinNumber"
+                  name="tinNumber"
+                  value={formData.tinNumber}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-800 mb-2" htmlFor="businessType">Business Type</label>
-              <select
-                id="businessType"
-                name="businessType"
-                value={formData.businessType}
-                onChange={handleChange}
-                required
-                className="border border-gray-400 rounded-lg p-2 w-full text-gray-800"
-              >
-                <option value="">Select Business Type</option>
-                <option value="Type1">Type 1</option>
-                <option value="Type2">Type 2</option>
-                <option value="Type3">Type 3</option>
-              </select>
+              <label className="block text-gray-800 mb-2 text-sm" htmlFor="businessType">Business Type</label>
+              <div className="flex items-center border border-gray-300 rounded-lg p-4">
+                <FaBuilding className="text-gray-500 mr-3" />
+                <input
+                  type="text"
+                  id="businessType"
+                  name="businessType"
+                  value={formData.businessType}
+                  onChange={handleChange}
+                  required
+                  className="w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
-          <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 w-full mt-4">
+
+          <button
+            type="submit"
+            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out w-full mt-6"
+          >
             Sign Up
           </button>
         </form>
 
-         {/* Success Message */}
-         {successMessage && (
-          <div className="mt-4 p-4 bg-green-100 text-green-800 rounded text-center">
+        {/* Success/Failure Messages */}
+        {successMessage && (
+          <div className="mt-6 p-4 bg-green-100 text-green-800 rounded-lg text-center">
             {successMessage}
           </div>
         )}
-        <p className="text-center mt-4 text-gray-700">
-          Already Registered? <a href="/signin
-          " className="text-blue-600">Sign In</a>
+
+        {errorMessage && (
+          <div className="mt-6 p-4 bg-red-100 text-red-800 rounded-lg text-center">
+            {errorMessage}
+          </div>
+        )}
+
+        <p className="text-center mt-6 text-gray-700 text-sm">
+          Already have an account?{" "}
+          <a href="/signin" className="text-blue-600 hover:text-blue-800">
+            Sign In
+          </a>
         </p>
       </div>
     </div>

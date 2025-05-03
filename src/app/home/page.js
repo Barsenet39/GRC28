@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation"; // Ensure you import useRouter
-import { ShieldCheckIcon, DocumentCheckIcon, ClockIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { Dialog } from '@headlessui/react';
 
 const View = () => {
@@ -11,6 +10,7 @@ const View = () => {
   const handleRedirect = () => {
     router.push('/Package'); // Redirect to the '/new-request' route
   };
+  
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
@@ -111,70 +111,62 @@ const View = () => {
       {/* Main Content */}
       <main className="flex-grow flex flex-col items-center p-6 mb-0 w-full">
         <div className="max-w-full p-8 flex flex-col items-center"> {/* Full width for content */}
-            {/* GRC — Refined Landing Section */}
-               <div className="relative w-full overflow-hidden py-18 px-6 md:px-16 bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl shadow-2xl">
-           {/* Background Blobs */}
-          <div className="absolute -top-40 -left-40 w-86 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-spin-slow"></div>
-          <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-spin-reverse-slow"></div>
+        <div className="relative w-full overflow-hidden">
+  {/* Background Blobs */}
+  <div className="absolute -top-40 -left-40 w-86 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-spin-slow"></div>
+  <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse"></div>
+  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-spin-reverse-slow"></div>
 
-{/* GRC Modern Section - Refined and Compact */}
-<div className="relative flex flex-col md:flex-row items-start gap-10 z-10 py-10 px-4 md:px-12">
-  {/* Text Section */}
-  <div className="md:w-2/3 space-y-6" data-aos="fade-right">
-    <h2 className="text-4xl md:text-6xl font-extrabold text-black leading-tight">
-      Governance Risk Compliance.
-    </h2>
-    <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-      A streamlined GRC approach designed to simplify enterprise protection, enhance visibility, and ensure you’re ready for whatever comes next. pproach designed to simplify enterprise protection, and ensure you’re ready for whatever comes next. A streamlined GRC approach designed to simplify enterprise protection, enhance visibility, and ensure you’re ready for whatever comes next.
-    </p>
-
-    {/* Only Two Abstract Content Blocks */}
-    <div className="space-y-4">
-      <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
-        <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
-        <p className="text-sm text-gray-600">
-          Build resilient frameworks aligned with your business goals and compliance needs.
-        </p>
+  {/* GRC Modern Section */}
+  <div className="relative flex flex-col md:flex-row items-start gap-10 z-10 py-10 px-4 md:px-12">
+    {/* Text Section */}
+    <div className="md:w-2/3 space-y-6" data-aos="fade-right">
+      <h2 className="text-4xl md:text-6xl font-extrabold text-black leading-tight">
+        Governance Risk Compliance.
+      </h2>
+      <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+        A streamlined GRC approach designed to simplify enterprise protection, enhance visibility, and ensure you’re ready for whatever comes next.
+      </p>
+      {/* Abstract Content Blocks */}
+      <div className="space-y-4">
+        <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
+          <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
+          <p className="text-sm text-gray-600">
+            Build resilient frameworks aligned with your business goals and compliance needs.
+          </p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+          <h4 className="text-black font-semibold mb-1">Real-Time Risk Intelligence</h4>
+          <p className="text-sm text-gray-600">
+            Leverage live analytics and threat modeling to proactively mitigate risks.
+          </p>
+        </div>
       </div>
+    </div>
 
-      <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-        <h4 className="text-black font-semibold mb-1">Real-Time Risk Intelligence</h4>
-        <p className="text-sm text-gray-600">
-          Leverage live analytics and threat modeling to proactively mitigate risks.
-        </p>
+    {/* Video Section */}
+    <div className="w-full flex justify-start pt-4 md:pt-16" data-aos="fade-left">
+      <video
+        src="/cyybbb.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="w-full max-w-4xl h-96 rounded-2xl shadow-xl border border-gray-200 transform transition-transform duration-500 group-hover:-translate-y-2 object-cover"
+      />
+      <div className="absolute bottom-3 right-3 bg-gradient-to-tr from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md">
+        Trusted GRC Partner
       </div>
     </div>
   </div>
 
- {/* Video Section */}
-<div className="md:w-1/2 flex justify-center pt-4 md:pt-16" data-aos="fade-left">
-  <div className="relative w-full max-w-lg max-h-lg group">
-    <video
-      src="/cyybbb.mp4"
-      autoPlay
-      muted
-      loop
-      playsInline
-      className="w-full h-auto rounded-2xl shadow-xl border border-gray-200 transform transition-transform duration-500 group-hover:-translate-y-2"
-    />
-    <div className="absolute bottom-3 right-3 bg-gradient-to-tr from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md">
-      Trusted GRC Partner
-    </div>
-  </div>
-</div>
-
-
-</div>
-
-
-  {/* Marquee Below Image */}
+  {/* Marquee */}
   <div className="w-full mt-12 overflow-hidden whitespace-nowrap border-t border-b border-gray-200 py-3">
     <p
       className="inline-block text-base font-medium text-purple-600"
       style={{ animation: 'marquee 18s linear infinite' }}
     >
-      ✨| Information Network Security Admininstration| Master Governance | Stay Compliant | Mitigate Risks in Real Time | Transform GRC into a Competitive Edge ✨
+      ✨| Information Network Security Administration | Master Governance | Stay Compliant | Mitigate Risks in Real Time | Transform GRC into a Competitive Edge ✨
     </p>
     <style jsx global>{`
       @keyframes marquee {
@@ -183,11 +175,11 @@ const View = () => {
       }
     `}</style>
   </div>
-          </div>
+</div>
 
 
 {/* 🔐 Unified Cybersecurity Section with Sliding GIFs */}
-<div className="w-full px-6 md:px-16 py-16 bg-gradient-to-br from-white via-gray-50 to-white rounded-3xl shadow-xl overflow-hidden space-y-12">
+<div className="w-full px-6 md:px-16 py-16 bg-white overflow-hidden space-y-12">
 
   {/* Section Title */}
   <h2 className="text-4xl md:text-5xl font-extrabold text-center text-gray-900 mb-10">
@@ -205,7 +197,7 @@ const View = () => {
           className="w-1/2 h-full object-cover"
         />
         <img 
-          src="/cyb3.gif" 
+          src="/cybb3.gif" 
           alt="Cybersecurity Management"
           className="w-1/2 h-full object-cover"
         />
@@ -243,7 +235,9 @@ const View = () => {
   `}</style>
 </div>
 
-<div className="w-full px-6 md:px-16 py-16 bg-white">
+
+
+<div className="w-full px-6 md:px-16 py-16 bg-gray-100">
   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 text-center">
     Our Cybersecurity Services
   </h2>
@@ -253,7 +247,7 @@ const View = () => {
 
   <div className="w-full flex flex-col md:flex-row justify-between items-start gap-8">
     {/* Box 1 - Risk Assessment */}
-    <div className="bg-[#EFF6FF] rounded-2xl shadow-sm p-6 md:w-[30%] w-full border border-blue-100 hover:shadow-md transition duration-300 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl shadow-lg p-8 md:w-[30%] w-full border border-blue-200 hover:shadow-xl transition duration-300 transform hover:scale-105 flex flex-col justify-between">
       <div>
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Cyber Security Risk Assessment
@@ -265,13 +259,15 @@ const View = () => {
           <li>Cyber Security Awareness & Cultural Assessment</li>
         </ul>
       </div>
-      <button className="mt-6 text-sm text-blue-600 font-medium hover:underline self-start">
-        Learn More →
-      </button>
+      <div className="flex justify-center mt-6">
+        <button className="text-sm text-white bg-blue-500 px-6 py-2 rounded-lg hover:bg-blue-600 font-medium">
+          Learn More →
+        </button>
+      </div>
     </div>
 
     {/* Box 2 - Governance Docs */}
-    <div className="bg-[#ECFDF5] rounded-2xl shadow-sm p-6 md:w-[36%] w-full border border-green-100 hover:shadow-md transition duration-300 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl shadow-lg p-8 md:w-[36%] w-full border border-green-200 hover:shadow-xl transition duration-300 transform hover:scale-105 flex flex-col justify-between">
       <div>
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Governance Document Development
@@ -295,13 +291,15 @@ const View = () => {
           </ul>
         </div>
       </div>
-      <button className="mt-6 text-sm text-green-600 font-medium hover:underline self-start">
-        Learn More →
-      </button>
+      <div className="flex justify-center mt-6">
+        <button className="text-sm text-white bg-green-500 px-6 py-2 rounded-lg hover:bg-green-600 font-medium">
+          Learn More →
+        </button>
+      </div>
     </div>
 
     {/* Box 3 - Risk Template */}
-    <div className="bg-[#F5F3FF] rounded-2xl shadow-sm p-6 md:w-[30%] w-full border border-purple-100 hover:shadow-md transition duration-300 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl shadow-lg p-8 md:w-[30%] w-full border border-purple-200 hover:shadow-xl transition duration-300 transform hover:scale-105 flex flex-col justify-between">
       <div>
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Cyber Security Risk Template
@@ -312,26 +310,33 @@ const View = () => {
           <li>Cyber Security Risk Register Template</li>
         </ul>
       </div>
-      <button className="mt-6 text-sm text-purple-600 font-medium hover:underline self-start">
-        Learn More →
-      </button>
+      <div className="flex justify-center mt-6">
+        <button className="text-sm text-white bg-purple-500 px-6 py-2 rounded-lg hover:bg-purple-600 font-medium">
+          Learn More →
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 
 
+
           {/* How to Apply Section */}
-          <div id="how-to-apply" className="mt-8 flex flex-col md:flex-row justify-center items-start space-y-4 md:space-y-0 md:space-x-4 w-full mb-8">
-            {/* Text Section */}
-            <div className="flex flex-col items-center max-w-md w-full">
-              <h2 className="text-2xl font-semibold text-black mb-4 text-center">
-                How to Apply?
-              </h2>
-              <p className="text-black mb-6 text-left">
-                Welcome to the Cyber Security Risk Management System. Simply log in, use the "Risk Assessment" feature to identify vulnerabilities, manage risks with suggested strategies, generate reports, and stay updated with system patches to protect your organization from cyber threats.
-              </p>
-            </div>
+          <div id="how-to-apply" className="mt-12 flex flex-col md:flex-row justify-center items-start space-y-6 md:space-y-0 md:space-x-8 w-full mb-12 p-6 rounded-lg shadow-lg">
+  {/* Text Section */}
+  <div className="flex flex-col items-center max-w-md w-full p-6 bg-white rounded-lg shadow-xl">
+    <h2 className="text-3xl font-semibold text-gray-800 mb-4 text-center leading-snug">
+      How to Apply?
+    </h2>
+    <p className="text-gray-700 mb-6 text-left text-lg">
+      Welcome to the Cyber Security Risk Management System. Simply log in, use the "Risk Assessment" feature to identify vulnerabilities, manage risks with suggested strategies, generate reports, and stay updated with system patches to protect your organization from cyber threats.
+    </p>
+    <a href="#signup" className="bg-gradient-to-r from-gray-800 to-gray-600 text-white px-6 py-3 rounded-lg text-lg font-semibold transition duration-300 ease-in-out transform hover:scale-105">
+ Watch videos
+</a>
+
+  </div>
 
            {/* YouTube Iframe */}
 <div className="flex justify-center w-full">
@@ -372,7 +377,7 @@ const View = () => {
           </div>
 
           {/* Contact Information Section */}
-          <div id="contact" className="flex flex-col md:flex-row justify-center items-start w-full bg-white p-8 rounded-lg shadow-lg mt-8">
+          <div id="contact" className="flex flex-col md:flex-row justify-center items-start w-full bg-gray-50 p-8 rounded-lg shadow-lg mt-8">
             {/* Contact Information */}
             <div className="text-white p-6 max-w-sm bg-black rounded-lg shadow-md  mt-16">
               <h3 className="text-xl font-bold text-white">CONTACT INFORMATION</h3>
@@ -383,29 +388,29 @@ const View = () => {
             </div>
 
             {/* Contact Form */}
-            <div className="relative ml-0 md:ml-8 w-full max-w-lg p-6">
+            <div className="relative ml-0 md:ml-8 w-full bg-white max-w-lg p-6">
               {/* Background Image with 50% Opacity */}
-              <div className="absolute inset-0 bg-[url('/backgroundimage.png')] bg-cover bg-center opacity-20"></div>
+              <div className="absolute inset-0 bg-[url('/backgroundimage.png')] bg-cover bg-center opacity-10"></div>
               
               {/* Form Content */}
               <div className="relative z-10 rounded-lg shadow-md p-6">
-  <h2 className="text-2xl font-semibold text-blue-500">Contact Us</h2>
-  <p className="mt-2 text-black">Any question or remarks? Just write us a message!</p>
-  <form className="mt-4">
-    <div className="flex flex-col md:flex-row md:space-x-4">
-      <input
-        type="text"
-        placeholder="First Name"
-        className="border border-gray-300 rounded-md w-full md:w-1/2 p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <input
-        type="text"
-        placeholder="Last Name"
-        className="border border-gray-300 rounded-md w-full md:w-1/2 p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-    <div className="flex flex-col md:flex-row md:space-x-4 mt-4">
-      <input
+             <h2 className="text-2xl font-semibold text-blue-500">Contact Us</h2>
+             <p className="mt-2 text-black">Any question or remarks? Just write us a message!</p>
+             <form className="mt-4">
+            <div className="flex flex-col md:flex-row md:space-x-4">
+            <input
+             type="text"
+             placeholder="First Name"
+             className="border border-gray-300 rounded-md w-full md:w-1/2 p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+             />
+             <input
+               type="text"
+              placeholder="Last Name"
+              className="border border-gray-300 rounded-md w-full md:w-1/2 p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+             </div>
+            <div className="flex flex-col md:flex-row md:space-x-4 mt-4">
+           <input
         type="email"
         placeholder="Email"
         className="border border-gray-300 rounded-md w-full md:w-1/2 p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -429,6 +434,7 @@ const View = () => {
 </form>
 </div>
             </div>
+
           </div>
         </div>
       </main>

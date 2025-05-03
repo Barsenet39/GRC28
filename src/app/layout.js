@@ -1,4 +1,4 @@
-// layout.js
+// layout.js (Main Layout)
 import './globals.css'; // Global styles
 import HeaderClient from './header/HeaderClient'; // Import the HeaderClient component
 import ClientLayout from './ClientLayout'; // Ensure this import is correct
@@ -10,7 +10,6 @@ export const metadata = {
     themeColor: '#3b82f6',
 };
 
-
 export default function RootLayout({ children }) {
     return (
       <html lang="en">
@@ -20,5 +19,4 @@ export default function RootLayout({ children }) {
         </body>
       </html>
     );
-  }
-  
+}

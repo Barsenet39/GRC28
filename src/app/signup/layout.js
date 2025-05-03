@@ -1,23 +1,8 @@
-"use client"; // Required for interactive client-side components
-
-import { useEffect, useState } from 'react';
-import HeaderClient from '../header/HeaderClient'; // Adjust the path if necessary
-
-const RootLayout = ({ children }) => {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
+// Correct way: Don't render <html> or <body> here.
+export default function SignupLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen bg-background">
-        <HeaderClient />
-        {isClient && <div>{children}</div>} {/* Render children only on the client */}
-      </body>
-    </html>
+    <div className="flex flex-col min-h-screen bg-background">
+      {children}
+    </div>
   );
-};
-
-export default RootLayout;
+}

@@ -51,3 +51,32 @@ body {
     text-wrap: balance;
   }
 }
+
+
+@keyframes rotateOnce {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotateOnce {
+  animation: rotateOnce 1.5s ease-in-out forwards;
+}
+
+@keyframes rotateY {
+  from {
+    transform: rotateY(180deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+.animate-rotateY {
+  animation: rotateY 8s linear infinite;
+  transform-style: preserve-3d;
+}
+

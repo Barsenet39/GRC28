@@ -14,7 +14,7 @@ export default function HeaderClient() {
   }, []);
 
   // Define routes where the header should NOT show
-  const hideHeaderRoutes = ['/signin', '/sign-up'];
+  const hideHeaderRoutes = ['/signin', '/signup'];
 
   if (!isMounted) {
     return null; // Don't render until after mounting

@@ -1,4 +1,4 @@
-"use client"; // Required for interactive client-side components
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -6,236 +6,253 @@ import { useState } from "react";
 const View = () => {
   const router = useRouter();
 
+  const [selectedCards, setSelectedCards] = useState([]);
+  const [uploadedFile, setUploadedFile] = useState(null);
+
+  const handleSelect = (id) => {
+    setSelectedCards((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size <= 5 * 1024 * 1024) {
+      setUploadedFile(file);
+    } else {
+      alert("File too large. Max 5MB allowed.");
+    }
+  };
+
+  const handleSubmit = () => {
+    const selectedServices = selectedCards.map((id) => {
+      const card = riskCards.find((c) => c.id === id);
+      return {
+        name: card?.title || "",
+        cost:
+          (card?.description.match(/(\d[\d,]*) ETB/i) || [])[1] || "Unknown",
+      };
+    });
+
+    if (uploadedFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const fileBase64 = reader.result;
+
+        const newRequest = {
+          id: `REG/${Math.floor(100000 + Math.random() * 900000)}`,
+          companyName: "Adama Science and Technology University",
+          date: new Date().toISOString().split("T")[0],
+          type: "Project",
+          status: "Requested",
+          services: [
+            {
+              category: "Cyber Security Risk Assessment",
+              subCategory: "Selected Items",
+              items: selectedServices,
+            },
+          ],
+          files: {
+            [uploadedFile.name]: fileBase64,
+          },
+        };
+
+        const existing = JSON.parse(localStorage.getItem("requests") || "[]");
+        const updatedRequests = [...existing, newRequest].slice(-20);
+        localStorage.setItem("requests", JSON.stringify(updatedRequests));
+
+        alert("Form submitted!");
+        router.push("/status");
+      };
+      reader.readAsDataURL(uploadedFile);
+    } else {
+      alert("Please upload a file before submitting.");
+    }
+  };
+
+  const riskCards = [
+    {
+      id: 0,
+      section: "General",
+      title: "Strategic Level Risk Assessment (SLRA)",
+      description:
+        "Identifies strategic risks across financial, technical, and organizational dimensions. Helps leadership plan effectively and mitigate long-term threats. For a project costing up to 1,500,000 ETB.",
+      image: "/role.png",
+    },
+    {
+      id: 1,
+      section: "General",
+      title: "Tactical Level Risk Assessment (TLRA)",
+      description:
+        "Assesses tactical execution risks, bridging the gap between strategy and operations. Focuses on budgetary impact, team execution, and deliverable clarity. Costing up to 1,700,000 ETB.",
+      image: "/security.png",
+    },
+    {
+      id: 2,
+      section: "General",
+      title: "Operational Level Risk Assessment (OLRA)",
+      description:
+        "Targets daily risks including process flaws, resource allocation, and delivery pipelines. Ensures resilient project operations. For a project costing up to 900,000 ETB.",
+      image: "/consulting.png",
+    },
+    {
+      id: 3,
+      section: "General",
+      title: "CS Awareness & Cultural Assessment",
+      description:
+        "Analyzes employee awareness and attitudes toward cybersecurity, helping align culture with policy. Promotes organization-wide digital safety.",
+      image: "/security-policy.png",
+    },
+    {
+      id: 4,
+      section: "Cyber",
+      title: "Asset Management Template (AMT)",
+      description:
+        "Ensures proper cataloging, tracking, and risk profiling of IT assets across departments. Strengthens visibility and control. For a project costing up to 1,500,000 ETB.",
+      image: "/role.png",
+    },
+    {
+      id: 5,
+      section: "Cyber",
+      title: "Tactical Level Risk Assessment (TLRA)",
+      description:
+        "Examines technical vulnerabilities in systems and networks with targeted mitigation plans. Supports incident prevention. Costing up to 1,500,000 ETB.",
+      image: "/security.png",
+    },
+    {
+      id: 6,
+      section: "Cyber",
+      title: "Operational Level Risk Assessment (OLRA)",
+      description:
+        "Focuses on IT support processes and everyday system risks. Ensures continuity and compliance. Costing up to 1,500,000 ETB.",
+      image: "/consulting.png",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center">
+      <div className="flex flex-col items-center justify-center py-6 w-full">
+        <h1 className="text-3xl font-bold mb-2 text-center text-gray-800">
+          Cyber Security Risk Management
+        </h1>
 
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Cyber Security Risk Management</h1>
-        <h2 className="text-xl mb-8 text-center text-gray-800">Cyber Security Risk Assessment</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl px-4">
-          {/* Strategic Level Risk Assessment Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-120 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Strategic Level Risk Assessment (SLRA)</h3>
-            <p className="mb-4 text-gray-700">
-              The Strategic Level Risk Assessment (SLRA) identifies financial, operational, and technical risks,
-              utilizing mitigation strategies for successful execution, or a project costing
-              <strong> 600,000 - 1,500,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Learn More
-            </button>
+        {["General", "Cyber"].map((section) => (
+          <div key={section} className="w-full">
+            <h2 className="text-xl font-bold mt-4 mb-4 text-center text-gray-800 border-b pb-2">
+              {section === "General"
+                ? "General Risk Assessment"
+                : "Cyber Security Risk Assessment"}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4">
+              {riskCards
+                .filter((card) => card.section === section)
+                .map((card) => {
+                  const costMatch = card.description.match(
+                    /up to ([\d,]+ ETB)/i
+                  );
+                  const cost = costMatch ? costMatch[1] : null;
+                  const cleanDescription = card.description.replace(
+                    /(for a project )?costing up to [\d,]+ ETB\.?/i,
+                    ""
+                  );
+
+                  return (
+                    <div
+                      key={card.id}
+                      className={`rounded-xl shadow-md p-4 flex flex-col items-center bg-white transition-transform duration-300 transform hover:scale-105 ${
+                        selectedCards.includes(card.id)
+                          ? "border-2 border-green-500"
+                          : ""
+                      }`}
+                    >
+                      <div className="w-20 h-20 rounded-full overflow-hidden mb-3 border-4 bg-white border-gray-300 shadow">
+                        <img
+                          src={card.image}
+                          alt={card.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className="text-base font-semibold mb-2 text-center text-gray-900">
+                        {card.title}
+                      </h3>
+                      <p className="text-gray-700 text-sm text-center mb-2 leading-relaxed">
+                        {cleanDescription}
+                      </p>
+                      {cost && (
+                        <div className="text-green-700 italic font-medium text-sm mb-3">
+                          Estimated Cost: {cost}
+                        </div>
+                      )}
+                      <button
+                        className={`py-1.5 px-4 rounded-lg ${
+                          selectedCards.includes(card.id)
+                            ? "bg-green-600"
+                            : "bg-blue-600"
+                        } text-white hover:bg-opacity-80 transition duration-200 text-sm`}
+                        onClick={() => handleSelect(card.id)}
+                      >
+                        {selectedCards.includes(card.id)
+                          ? "Selected"
+                          : "Select"}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
+        ))}
+{/* File Upload & Submit */}
+<div className="bg-white rounded-lg shadow-lg p-6 mt-10 w-full max-w-2xl ml-4 md:mr-auto md:mr-8 px-4">
+  <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center md:text-left">
+    Request Form
+  </h2>
 
-          {/* Tactical Level Risk Assessment Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-120 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Tactical Level Risk Assessment (TLRA)</h3>
-            <p className="mb-4 text-gray-700">
-              Tactical Level Risk Assessment (TLRA) evaluates operational, technical, and financial risks for a project,
-              focusing on mitigation strategies to ensure project viability costing
-              <strong> 680,000 - 1,700,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Learn More
-            </button>
-          </div>
-
-          {/* Operational Level Risk Assessment Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-120 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Operational Level Risk Assessment (OLRA)</h3>
-            <p className="mb-4 text-gray-700">
-              Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks, ensuring efficiency through proactive mitigation strategies, for a project costing
-              <strong> 760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Select
-            </button>
-          </div>
-
-          {/* CS Awareness & Cultural Assessment Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-120 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">CS Awareness & Cultural Assessment</h3>
-            <p className="mb-4 text-gray-700">
-              CS Awareness & Cultural Assessment analyzes process, resource, and execution risks, ensuring efficiency through proactive mitigation strategies, for a project costing
-              <strong> 760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Select
-            </button>
-          </div>
-        </div>
-
-        {/* Cyber Security Risk Template Section */}
-        <h2 className="text-xl mt-12 mb-6 text-center text-gray-800">Cyber Security Risk Template</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl px-4">
-          {/* Asset Management Template Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-96 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Asset Management Template (AMT)</h3>
-            <p className="mb-4 text-gray-700">
-              Asset Management Template (AMT) analyzes process, resource, and execution risks, ensuring efficiency through proactive mitigation strategies, for a project costing
-              <strong> 520,000 - 1,300,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Select
-            </button>
-          </div>
-
-          {/* Risk Monitoring Dashboard Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-96 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Risk Monitoring Dashboard (RMD)</h3>
-            <p className="mb-4 text-gray-700">
-              Risk Monitoring Dashboard (RMD) analyzes process, resource, and execution risks, ensuring efficiency through proactive mitigation strategies, for a project costing
-              <strong> 760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Select
-            </button>
-          </div>
-
-          {/* CS Risk Register Template Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 w-96 h-80">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">CS Risk Register Template (CSRT)</h3>
-            <p className="mb-4 text-gray-700">
-              CS Risk Register Template (CSRT) analyzes process, resource, and execution risks, ensuring efficiency through proactive mitigation strategies, for a project costing
-              <strong> 760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-              Select
-            </button>
-          </div>
-        </div>
-  <div className="flex flex-col items-center justify-center py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Cyber Security Management</h1>
-        <h2 className="text-xl mb-8 text-center text-gray-800">Governance Document Development</h2>
-        
-        {/* Risk Assessment Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-4">
-          {/* Card 1: Strategic Level Risk Assessment */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Roles and Responsibility for management, risk communication and mitigation document</h3>
-            <p className="mb-4 text-gray-700">
-              Identifies financial, operational, and technical risks, utilizing mitigation strategies for successful execution, costing <strong>600,000 - 1,500,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Learn More</button>
-          </div>
-
-          {/* Card 2: Tactical Level Risk Assessment */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Rsk Quantification Document</h3>
-            <p className="mb-4 text-gray-700">
-              Evaluates operational, technical, and financial risks, ensuring project viability costing <strong>680,000 - 1,700,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Learn More</button>
-          </div>
-
-          {/* Card 3: Operational Level Risk Assessment */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Strategy Document</h3>
-            <p className="mb-4 text-gray-700">
-              Analyzes process, resource, and execution risks, ensuring efficiency through proactive strategies, costing <strong>760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 4: CS Awareness & Cultural Assessment */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Governance System Document </h3>
-            <p className="mb-4 text-gray-700">
-              Analyzes process, resource, and execution risks, costing <strong>760,000 - 1,900,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 5: New Risk Assessment Type 1 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Organizational Cyber Security Roadmap Document</h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>500,000 - 1,200,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 6: New Risk Assessment Type 2 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Corporate Cyber Secuirty Policy Document </h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>700,000 - 1,800,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 7: New Risk Assessment Type 3 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Standards Document</h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>650,000 - 1,500,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 8: New Risk Assessment Type 4 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Programs Document </h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>800,000 - 2,000,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 9: New Risk Assessment Type 5 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security Issue Specific Policy Document</h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>900,000 - 2,300,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-
-          {/* Card 10: New Risk Assessment Type 6 */}
-          <div className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cyber Security System Specific Policy Document</h3>
-            <p className="mb-4 text-gray-700">
-            Operational Level Risk Assessment (OLRA) analyzes process, resource, and execution risks , ensuring efficiency through proactive mitigation strategies.  for a project costing<strong>1,000,000 - 2,500,000 ETB</strong>.
-            </p>
-            <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Select</button>
-          </div>
-        </div>
-
-        {/* Request Form Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mt-12 w-full max-w-9xl mx-auto">
-  <h2 className="text-2xl font-bold mb-6 text-gray-900">Request Form</h2>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {/* Request Type Selection */}
-    <div className="flex flex-col">
-      <label className="font-semibold text-gray-800 mb-2">Select your request type:</label>
-      <div className="flex items-center mb-2">
-        <input type="radio" name="requestType" value="Project" className="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500" />
-        <span className="text-gray-800">Project</span>
-      </div>
-      <div className="flex items-center">
-        <input type="radio" name="requestType" value="Review" className="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500" />
-        <span className="text-gray-800">Review</span>
-      </div>
-    </div>
-
-    {/* File Upload Area */}
-    <div className="flex flex-col">
-      <label className="font-semibold text-gray-800 mb-2">Attach your letter or any additional documents:</label>
-      <div className="border-dashed border-2 border-gray-300 p-6 rounded-lg text-center bg-gray-50">
-        <p className="mb-2 text-gray-700">Drag & drop your files here or</p>
-        <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200">Browse Files</button>
-        <p className="mt-2 text-gray-500">Upload Request Letter (PDF formats, up to 5MB)</p>
+  <div className="w-full">
+    <div className="flex flex-col items-center md:items-start w-full">
+      <label className="font-semibold text-gray-800 mb-2 text-center md:text-left">
+        Attach your letter or any additional documents:
+      </label>
+      <div className="border-dashed border-2 border-gray-300 p-6 rounded-lg text-center bg-gray-50 w-full">
+        <p className="mb-2 text-gray-700">
+          Drag & drop your files here or
+        </p>
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={handleFileChange}
+          className="hidden"
+          id="fileUpload"
+        />
+        <label htmlFor="fileUpload">
+          <span className="bg-blue-600 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-700 transition duration-200 inline-block">
+            Browse Files
+          </span>
+        </label>
+        <p className="mt-2 text-gray-500">
+          Upload Request Letter (PDF format, up to 5MB)
+        </p>
+        {uploadedFile && (
+          <p className="mt-2 text-green-600">
+            Uploaded: {uploadedFile.name}
+          </p>
+        )}
       </div>
     </div>
   </div>
-</div>
 
-        {/* Action Buttons Outside the Box */}
-        <div className="flex justify-between mt-4 w-full">
-          <button className="bg-gray-300 text-black py-2 px-4 rounded hover:bg-gray-400">Cancel</button>
-          <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Submit</button>
-        </div>
-      </div>
+  <div className="flex justify-between mt-6">
+    <button className="bg-gray-300 text-black py-2 px-4 rounded hover:bg-gray-400">
+      Cancel
+    </button>
+    <button
+      className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+      onClick={handleSubmit}
+    >
+      Submit
+    </button>
+  </div>
+</div>
 
       </div>
     </div>

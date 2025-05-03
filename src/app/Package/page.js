@@ -9,6 +9,7 @@ const View = () => {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(false); // Define successMessage state
 
   const handleFileChange = (e, type) => {
     const selectedFile = e.target.files[0];
@@ -41,26 +42,34 @@ const View = () => {
   };
 
   const handleUpload = () => {
+    // Check if no files are uploaded
     if (!letterFile && !projectFile) {
       setError("Please upload at least one file.");
       return;
     }
   
+
+    setError(""); // Clear any error messages if files are present
+    setSuccessMessage(true); // Show success message
+ 
+    // Prepare files to be stored
     const files = {};
     if (letterFile) files[letterFile.name] = URL.createObjectURL(letterFile);
     if (projectFile) files[projectFile.name] = URL.createObjectURL(projectFile);
-
-    const isReview = true; // Set true because this comes from "Technical Support"
-
+  
+    // Simulate "Review" request type
+    const isReview = true;
+  
+    // Prepare the request data
     const newRequest = {
-      id: `GOV/${Math.floor(Math.random() * 1000000)}`,
+      id: `GOV/${Math.floor(Math.random() * 1000000)}`, // Unique ID
       companyName: "Adama Science and Technology University",
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0], // Current date
       type: isReview ? "Review" : "Project",
       status: "Requested",
-      files,
+      files, // Attach uploaded files
       ...(isReview
-        ? {} // No services at all if Review
+        ? {} // No services if it's a "Review"
         : {
             services: [
               {
@@ -76,16 +85,30 @@ const View = () => {
             ]
           }),
     };
- 
+  
+    // Retrieve existing requests from localStorage
     const storedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
+  
+    // Add the new request to the list of stored requests
     storedRequests.push(newRequest);
+  
+    // Save the updated list back to localStorage
     localStorage.setItem("requests", JSON.stringify(storedRequests));
   
-    setModalOpen(false);
+    // Reset modal and file inputs
+   // setModalOpen(false);
     setLetterFile(null);
     setProjectFile(null);
+  
     console.log("✅ Request saved to localStorage:", newRequest);
   };
+  
+  // Cancel button click handler
+const handleCloseModal = () => {
+  setModalOpen(false);
+  setSuccessMessage(false); // Optionally hide success message on close
+};
+
 
   const serviceMappings = {
     CSRM: [
@@ -161,159 +184,196 @@ const View = () => {
 
   return (
     <div className="min-h-screen bg-white-100 flex flex-col items-center">
-      {/* Technical Support Section */}
-      <h1 className="text-3xl font-semibold text-center mb-0 mt-6 text-black">Select Your Package</h1>
-      <div className="container mx-auto p-6 mt-8 flex flex-col md:flex-row items-center">
-        {/* Text Section */}
-        <div className="md:w-1/2 mb-4 md:mb-0">
-          <h2 className="text-2xl font-semibold mb-4 text-black">Technical Support</h2>
-          <p className="mb-4 text-gray-700">
-            If you've completed your project or document and only need our technical support for a final review, simply upload your files. Choose the support option that best fits your needs, and we'll take care of the rest!
-          </p>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex justify-center items-center text-white bg-blue-600 py-2 px-4 rounded shadow-md hover:bg-blue-700 transition duration-200"
+{/* Technical Support Section */}
+<h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-6 md:mt-8 leading-tight text-center md:text-left">
+  Select <span className="text-blue-600">Your Package</span>
+</h1>
+
+
+<section className="bg-gradient-to-b from-white to-blue-50 py-22 mt-8">
+  <div className="container mx-auto px-8 max-w-6xl flex flex-col md:flex-row items-center gap-12">
+
+    {/* Text Section */}
+    <div className="md:w-1/2 text-center md:text-left">
+      <h2 className="text-3xl font-bold text-gray-900 mb-4">
+        Technical Support on Finished Project
+      </h2> 
+      <p className="text-gray-700 mb-6 leading-relaxed text-sm">
+        Already completed your project or letter? You're just a step away from technical refinement. 
+        Upload both your letter and project files using the button below — and our team will review and support your work with care and precision.
+      </p>
+      <button
+        onClick={() => setModalOpen(true)}
+        className="inline-flex items-center gap-3 bg-blue-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-all ease-in-out transform hover:scale-105"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v9m0 0l-3-3m3 3l3-3M12 3v9" />
+        </svg>
+        Upload Letter & Project
+      </button>
+    </div>
+
+    {/* Image Section */}
+    <div className="md:w-1/2">
+      <img
+        src="/upload1.png"
+        alt="Technical Support Illustration"
+        className="w-full animate-rotateY"
+      />
+    </div>
+
+  </div>
+
+  {/* Modal */}
+  {modalOpen && (
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center px-6">
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg p-10 relative animate-fadeInUp transition-all ease-in-out transform">
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 bg-green-100 text-green-700 p-6 rounded-lg text-center shadow-xl">
+            <p className="font-medium text-xl">Thank you! Your files were successfully uploaded!</p>
+            <p className="mt-2 text-lg">We will review your request and get back to you within a few days. Please check the status of your request periodically.</p>
+          </div>
+        )}
+
+        <h3 className="text-3xl font-semibold text-gray-800 mb-8 text-center">
+          Upload Your Letter & Project
+        </h3>
+
+        {/* Letter Upload */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Letter File</label>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => handleDrop(e, "letter")}
+            onClick={() => document.getElementById('letterInput').click()}
+            className={`border-2 rounded-xl p-6 mb-6 text-center cursor-pointer transition-all 
+              ${dragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 bg-gray-50'} 
+              hover:shadow-xl hover:border-blue-400`}
           >
-            Upload your files here
-          </button>
-        </div>
-
-        {/* Right Image */}
-        <div className="md:w-1/2">
-          <img
-            src="/upload.png" // Replace with your image URL
-            alt="Technical Support"
-            className="w-full h-auto object-cover rounded-lg "
-          />
-        </div>
-      </div>
-
-      {/* Modal for file upload */}
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
-          <div className="bg-white rounded-lg p-6 w-11/12 md:w-1/3 shadow-2xl transition transform duration-300">
-            <h3 className="text-lg font-semibold mb-4 text-black">Upload Your Letter and Project</h3>
-
-            {/* Upload your letter */}
-            <label className="block mb-2 text-black">Upload your letter:</label>
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => handleDrop(e, "letter")}
-              className={`border-2 ${dragging ? 'border-blue-500' : 'border-gray-300'} 
-                          p-4 mb-4 rounded text-black text-center transition duration-200 
-                          ${dragging ? 'bg-blue-100' : 'bg-white'} 
-                          cursor-pointer`}
-              onClick={() => document.getElementById('letterInput').click()}
-            >
-              {letterFile ? (
-                <p className="font-bold">{letterFile.name}</p> // Show file name in bold
-              ) : (
-                <p className="text-gray-400">Drag and drop your letter file here or click to upload</p>
-              )}
-              <input
-                type="file"
-                id="letterInput"
-                onChange={(e) => handleFileChange(e, "letter")}
-                className="hidden"
-              />
-            </div>
-
-            {/* Upload your project */}
-            <label className="block mb-2 text-black">Upload your project:</label>
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => handleDrop(e, "project")}
-              className={`border-2 ${dragging ? 'border-blue-500' : 'border-gray-300'} 
-                          p-4 mb-4 rounded text-black text-center transition duration-200 
-                          ${dragging ? 'bg-blue-100' : 'bg-white'} 
-                          cursor-pointer`}
-              onClick={() => document.getElementById('projectInput').click()}
-            >
-              {projectFile ? (
-                <p className="font-bold">{projectFile.name}</p> // Show file name in bold
-              ) : (
-                <p className="text-gray-400">Drag and drop your project file here or click to upload</p>
-              )}
-              <input
-                type="file"
-                id="projectInput"
-                onChange={(e) => handleFileChange(e, "project")}
-                className="hidden"
-              />
-            </div>
-
-            {error && <p className="text-red-500">{error}</p>}
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="text-gray-500 border border-gray-300 py-2 px-4 rounded hover:bg-gray-200 transition duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpload}
-                className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-              >
-                Submit
-              </button>
-            </div>
+            <p className="text-gray-600">
+              {letterFile ? <span className="font-medium text-gray-800">{letterFile.name}</span> : "Drag & drop or click to upload your letter"}
+            </p>
+            <input
+              type="file"
+              id="letterInput"
+              onChange={(e) => handleFileChange(e, "letter")}
+              className="hidden"
+            />
           </div>
         </div>
-      )}
 
-    {/* Package Card 1 - CSRM */}
-<div
-  onClick={() => {
-    handleProjectSelection("CSRM");
-    window.location.href = "/Risk-Management";
-  }}
-  className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 cursor-pointer"
->
-  <h3 className="text-xl font-bold mb-2 text-black">Cyber Security Risk Management</h3>
-  <p className="mb-4 text-gray-700">
-    Dedicated to identifying and assessing potential cyber risks, this division implements strategies to minimize vulnerabilities and protect digital assets, ensuring your organization is resilient to cyber threats.
-  </p>
-  <p className="text-blue-600 font-semibold text-center">Click to Submit & View Details</p>
+        {/* Project Upload */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Project File</label>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => handleDrop(e, "project")}
+            onClick={() => document.getElementById('projectInput').click()}
+            className={`border-2 rounded-xl p-6 mb-6 text-center cursor-pointer transition-all 
+              ${dragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 bg-gray-50'} 
+              hover:shadow-xl hover:border-blue-400`}
+          >
+            <p className="text-gray-600">
+              {projectFile ? <span className="font-medium text-gray-800">{projectFile.name}</span> : "Drag & drop or click to upload your project"}
+            </p>
+            <input
+              type="file"
+              id="projectInput"
+              onChange={(e) => handleFileChange(e, "project")}
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-6 mt-8">
+          <button
+            onClick={handleCloseModal}
+            className="px-6 py-3 rounded-lg text-gray-600 border border-gray-300 hover:bg-gray-100 transition-all ease-in-out transform"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            className="px-7 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all ease-in-out transform"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+</section>
+
+
+
+
+<section className="py-10 bg-gradient-to-b from-blue-50 to-white">
+  <div className="container mx-auto px-4 max-w-6xl">
+
+    <h2 className="text-3xl font-bold text-gray-800 mb-4"> Project Packages</h2>
+    <p className="text-gray-600 mb-10 text-sm leading-relaxed">
+  Select the cybersecurity package that aligns with your company’s vision. <br />
+  Choose based on your infrastructure, goals, and digital direction. <br />
+  Each option is crafted to elevate your protection and resilience. <br />
+  Let us guide you to the package that fits your future best.
+</p>
+
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  {/* Shared Card Styles */}
+  {[
+    {
+      title: "Cyber Security Risk Management",
+      description:
+        "Ideal for teams focused on identifying threats before they strike. Ideal for teams focused on identifying threats before they strike, Analyze risks and secure your digital assets from unseen vulnerabilities.",
+      route: "/Risk-Management",
+      key: "CSRM"
+    },
+    {
+      title: "Cyber Security Management",
+      description:
+        "Perfect for structured teams. Create and enforce policies, manage systems, and build a stable cybersecurity environment. Create and enforce policies, manage systems, and build a stable cybersecurity environment. ",
+      route: "/Management-Division",
+      key: "CSM"
+    },
+    {
+      title: "Both Cyber Security Risk Management and Cyber Security Management",
+      description:
+        "For visionary organizations: get both strategic and operational security — a full suite of solutions in one unified package.",
+      route: "/both",
+      key: "Both"
+    }
+  ].map(({ title, description, route, key }) => (
+    <div
+      key={key}
+      onClick={() => {
+        handleProjectSelection(key);
+        window.location.href = route;
+      }}
+      className="flex flex-col justify-between bg-white rounded-2xl border-t-4 border-blue-600 shadow-md p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+    >
+      <div>
+        <h3 className="text-xl font-semibold text-gray-800 mb-3">{title}</h3>
+        <p className="text-gray-600 text-sm mb-6">{description}</p>
+      </div>
+      <p className="text-blue-600 font-medium text-sm text-center mt-auto">Discover & Apply</p>
+    </div>
+  ))}
 </div>
 
-{/* Package Card 2 - CSM */}
-<div
-  onClick={() => {
-    handleProjectSelection("CSM");
-    window.location.href = "/Management-Division";
-  }}
-  className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 cursor-pointer"
->
-  <h3 className="text-xl font-bold mb-2 text-black">Cyber Security Management</h3>
-  <p className="mb-4 text-gray-700">
-    Responsible for the overall management of the organization's cybersecurity framework, this division develops policies, enforces security protocols, and monitors systems to safeguard your assets.
-  </p>
-  <p className="text-blue-600 font-semibold text-center">Click to Submit & View Details</p>
-</div>
+  </div>
+</section>
 
-{/* Package Card 3 - Both */}
-<div
-  onClick={() => {
-    handleProjectSelection("Both");
-    window.location.href = "/both";
-  }}
-  className="bg-white rounded-lg shadow-lg p-6 transition-transform transform hover:scale-105 cursor-pointer"
->
-  <h3 className="text-xl font-bold mb-2 text-black">Both (CSRM and CSM)</h3>
-  <p className="mb-4 text-gray-700">
-    Combining both divisions, this package offers a comprehensive approach to cybersecurity, ensuring that both risk management and security management are addressed holistically.
-  </p>
-  <p className="text-blue-600 font-semibold text-center">Click to Submit & View Details</p>
-</div>
 
 
       <footer className="text-black text-center p-0 m-0">
