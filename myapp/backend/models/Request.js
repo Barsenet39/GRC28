@@ -1,44 +1,27 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const requestSchema = new mongoose.Schema({
-  requestId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  type: {
-    type: String,
-    enum: ['Technical Support', 'Project'],
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ['Requested', 'Accepted', 'Closed', 'Expired', 'Rejected'],
-    default: 'Requested',
-  },
-  user: {
+const RequestSchema = new mongoose.Schema({
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
-  projectOption: {
-    type: String,
-  },
-  description: {
-    type: String,
-  },
-  files: {
-    letter: Buffer,
-    project: Buffer,
-  },
-  date: {
+  filename: {
     type: String,
     required: true,
   },
+  fileUrl: {
+    type: String,
+    required: true,
+  },
+  services: [{ // 👈 add this
+    type: String,
+    required: true,
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-export default mongoose.model('Request', requestSchema);
+export default mongoose.models.Request || mongoose.model("Request", RequestSchema);

@@ -125,8 +125,9 @@ const View = () => {
         Governance Risk Compliance.
       </h2>
       <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-        A streamlined GRC approach designed to simplify enterprise protection, enhance visibility, and ensure you’re ready for whatever comes next.
-      </p>
+  A streamlined governance, risk, and compliance (GRC) approach designed to simplify enterprise protection, enhance visibility across operations, support regulatory readiness, and ensure you're well-prepared for whatever challenges lie ahead.
+</p>
+
       {/* Abstract Content Blocks */}
       <div className="space-y-4">
         <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
@@ -135,13 +136,17 @@ const View = () => {
             Build resilient frameworks aligned with your business goals and compliance needs.
           </p>
         </div>
-        <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-          <h4 className="text-black font-semibold mb-1">Real-Time Risk Intelligence</h4>
+        
+   
+ {/* ✨ Beautiful "Get Started" Button */}
+ <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
+ <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
           <p className="text-sm text-gray-600">
-            Leverage live analytics and threat modeling to proactively mitigate risks.
+            Build resilient frameworks aligned with your business goals and compliance needs.
           </p>
-        </div>
-      </div>
+  </div>
+  </div>
+
     </div>
 
     {/* Video Section */}
@@ -436,6 +441,12 @@ const View = () => {
             </div>
 
           </div>
+
+
+
+
+
+          
         </div>
       </main>
 

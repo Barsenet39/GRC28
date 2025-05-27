@@ -3,13 +3,11 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   fullName: String,
   organization: String,
-  email: { type: String, required: true, unique: true },
+  email: { type: String, unique: true },
   phone: String,
-  password: { type: String, required: true },
+  password: String,
   tinNumber: String,
-  businessType: String,
+  businessType: String
 });
 
-const User = mongoose.model('User', userSchema);
-
-export default User; // ✅ This is the important line
+export default mongoose.model('User', userSchema);

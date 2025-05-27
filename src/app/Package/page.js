@@ -1,186 +1,162 @@
-"use client"; // Required for interactive client-side components
+'use client';
 
-import { useState } from "react";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const View = () => {
+  const router = useRouter();
   const [letterFile, setLetterFile] = useState(null);
   const [projectFile, setProjectFile] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
-  const [selectedPackage, setSelectedPackage] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(false); // Define successMessage state
+  const [successMessage, setSuccessMessage] = useState(false);
+ 
+  useEffect(() => {
+    const checkIfLoggedIn = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/me', { withCredentials: true });
+        if (!response.data.user) router.push('/signin');
+      } catch {
+        router.push('/signin');
+      }
+    };
+    checkIfLoggedIn();
+  }, [router]);
 
-  const handleFileChange = (e, type) => {
-    const selectedFile = e.target.files[0];
-    validateFile(selectedFile, type);
-  };
-
-  const handleDrop = (e, type) => {
-    e.preventDefault();
-    setDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    validateFile(droppedFile, type);
+  const getCompanyName = () => {
+    const name = localStorage.getItem("companyName");
+    return name && name.trim() !== "" ? name : "Adama Science and Technology University";
   };
 
   const validateFile = (file, type) => {
-    if (file) {
-      if (file.type !== "application/pdf") {
-        setError("Only PDF files are allowed.");
-        if (type === "letter") setLetterFile(null);
-        else if (type === "project") setProjectFile(null);
-      } else if (file.size > 5 * 1024 * 1024) { // 5 MB limit
-        setError("File size must be less than 5 MB.");
-        if (type === "letter") setLetterFile(null);
-        else if (type === "project") setProjectFile(null);
-      } else {
-        setError("");
-        if (type === "letter") setLetterFile(file);
-        else if (type === "project") setProjectFile(file);
-      }
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setError("Only PDF files are allowed.");
+      if (type === "letter") setLetterFile(null);
+      if (type === "project") setProjectFile(null);
+      return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size must be less than 5 MB.");
+      if (type === "letter") setLetterFile(null);
+      if (type === "project") setProjectFile(null);
+      return;
+    }
+
+    setError("");
+    if (type === "letter") setLetterFile(file);
+    if (type === "project") setProjectFile(file);
+  };
+
+  const handleFileChange = (e, type) => validateFile(e.target.files[0], type);
+  const handleDrop = (e, type) => {
+    e.preventDefault();
+    setDragging(false);
+    validateFile(e.dataTransfer.files[0], type);
+ // Convert file to Base64
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    setFileBase64(reader.result);
+  };
+  if (file) {
+    reader.readAsDataURL(file);
+  }
+
   };
 
   const handleUpload = () => {
-    // Check if no files are uploaded
     if (!letterFile && !projectFile) {
       setError("Please upload at least one file.");
       return;
     }
-  
 
-    setError(""); // Clear any error messages if files are present
-    setSuccessMessage(true); // Show success message
- 
-    // Prepare files to be stored
     const files = {};
     if (letterFile) files[letterFile.name] = URL.createObjectURL(letterFile);
     if (projectFile) files[projectFile.name] = URL.createObjectURL(projectFile);
-  
-    // Simulate "Review" request type
-    const isReview = true;
-  
-    // Prepare the request data
-    const newRequest = {
-      id: `GOV/${Math.floor(Math.random() * 1000000)}`, // Unique ID
-      companyName: "Adama Science and Technology University",
-      date: new Date().toISOString().split("T")[0], // Current date
-      type: isReview ? "Review" : "Project",
-      status: "Requested",
-      files, // Attach uploaded files
-      ...(isReview
-        ? {} // No services if it's a "Review"
-        : {
-            services: [
-              {
-                category: "Cyber Security Risk Management Service",
-                subCategory: "Governance Document Development",
-                items: [
-                  {
-                    name: "Strategic Level Risk Assessment",
-                    cost: "Up to 1,500,000"
-                  }
-                ]
-              }
-            ]
-          }),
-    };
-  
-    // Retrieve existing requests from localStorage
+
+
+
+
+const newRequest = {
+  id: `GRC/${Math.floor(Math.random() * 1000000)}`,
+  companyName: getCompanyName(),
+  date: new Date().toISOString().split("T")[0],
+  type: "Technical Support",
+  status: "Requested",
+  files: {
+  ...(letterFile && { [letterFile.name]: URL.createObjectURL(letterFile) }),
+  ...(projectFile && { [projectFile.name]: URL.createObjectURL(projectFile) }),
+},
+};
+
     const storedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-  
-    // Add the new request to the list of stored requests
     storedRequests.push(newRequest);
-  
-    // Save the updated list back to localStorage
     localStorage.setItem("requests", JSON.stringify(storedRequests));
-  
-    // Reset modal and file inputs
-   // setModalOpen(false);
+
+
+    
     setLetterFile(null);
     setProjectFile(null);
-  
-    console.log("✅ Request saved to localStorage:", newRequest);
+    setSuccessMessage(true);
   };
-  
+
   // Cancel button click handler
 const handleCloseModal = () => {
   setModalOpen(false);
   setSuccessMessage(false); // Optionally hide success message on close
 };
 
-
   const serviceMappings = {
     CSRM: [
       {
         category: "Cyber Security Risk Management Service",
         subCategory: "Governance Document Development",
-        items: [
-          {
-            name: "Strategic Level Risk Assessment",
-            cost: "Up to 1,500,000"
-          }
-        ]
+        items: [{ name: "Strategic Level Risk Assessment", cost: "Up to 1,500,000" }]
+       
       }
     ],
     CSM: [
       {
         category: "Cyber Security Management Service",
         subCategory: "Security Policy Enforcement",
-        items: [
-          {
-            name: "Security Protocol Implementation",
-            cost: "Up to 1,200,000"
-          }
-        ]
+        items: [{ name: "Security Protocol Implementation", cost: "Up to 1,200,000" }]
       }
     ],
     Both: [
       {
         category: "Cyber Security Risk Management Service",
         subCategory: "Governance Document Development",
-        items: [
-          {
-            name: "Strategic Level Risk Assessment",
-            cost: "Up to 1,500,000"
-          }
-        ]
+        items: [{ name: "Strategic Level Risk Assessment", cost: "Up to 1,500,000" }]
       },
       {
         category: "Cyber Security Management Service",
         subCategory: "Security Policy Enforcement",
-        items: [
-          {
-            name: "Security Protocol Implementation",
-            cost: "Up to 1,200,000"
-          }
-        ]
+        items: [{ name: "Security Protocol Implementation", cost: "Up to 1,200,000" }]
       }
     ]
   };
-  
 
-  const handleProjectSelection = (categoryKey) => {
-    const selectedServices = serviceMappings[categoryKey];
-  
+  const handleProjectSelection = (key, route) => {
+    const selectedServices = serviceMappings[key];
     const newRequest = {
-      id: `GOV/${Math.floor(Math.random() * 1000000)}`,
-      companyName: "Adama Science and Technology University",
+      id: `GRC/${Math.floor(Math.random() * 1000000)}`,
+      companyName: getCompanyName(),
       date: new Date().toISOString().split("T")[0],
-      type: "Project", // different from Review
+      type: "Project",
       status: "Requested",
+      files: {},
       services: selectedServices,
-      files: {} // No file upload for Project flow
     };
-  
     const storedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
     storedRequests.push(newRequest);
     localStorage.setItem("requests", JSON.stringify(storedRequests));
-  
-    console.log("📦 Project request saved:", newRequest);
-    window.location.href = "/service-selection"; // Change to your actual route
+    router.push(route);
   };
-  
+
 
   return (
     <div className="min-h-screen bg-white-100 flex flex-col items-center">
@@ -190,7 +166,7 @@ const handleCloseModal = () => {
 </h1>
 
 
-<section className="bg-gradient-to-b from-white to-blue-50 py-22 mt-8">
+<section className="w-full bg-gradient-to-b from-white to-blue-50 py-22 mt-8">
   <div className="container mx-auto px-8 max-w-6xl flex flex-col md:flex-row items-center gap-12">
 
     {/* Text Section */}
@@ -317,7 +293,7 @@ const handleCloseModal = () => {
 
 
 
-<section className="py-10 bg-gradient-to-b from-blue-50 to-white">
+<section className="w-full py-10 bg-gradient-to-b from-blue-50 to-white">
   <div className="container mx-auto px-4 max-w-6xl">
 
     <h2 className="text-3xl font-bold text-gray-800 mb-4"> Project Packages</h2>
@@ -343,7 +319,7 @@ const handleCloseModal = () => {
       title: "Cyber Security Management",
       description:
         "Perfect for structured teams. Create and enforce policies, manage systems, and build a stable cybersecurity environment. Create and enforce policies, manage systems, and build a stable cybersecurity environment. ",
-      route: "/Management-Division",
+      route: "/Management",
       key: "CSM"
     },
     {
@@ -356,10 +332,10 @@ const handleCloseModal = () => {
   ].map(({ title, description, route, key }) => (
     <div
       key={key}
-      onClick={() => {
-        handleProjectSelection(key);
-        window.location.href = route;
-      }}
+onClick={() => handleProjectSelection(key, route)}
+
+          
+          
       className="flex flex-col justify-between bg-white rounded-2xl border-t-4 border-blue-600 shadow-md p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
     >
       <div>

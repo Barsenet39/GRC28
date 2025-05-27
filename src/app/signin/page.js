@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { motion } from 'framer-motion';
 
 export default function SignIn() {
@@ -13,37 +14,54 @@ export default function SignIn() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('Sign-in data:', { email, password });
+
     try {
-      const response = await axios.post('http://localhost:5000/api/signin', {
-        email,
-        password,
+      // Send the POST request for signing in
+      const response = await axios.post(
+        'http://localhost:5000/api/signin', 
+        { email, password },
+        { withCredentials: true }
+      );
+      console.log('Sign-in response:', response);
+
+      // After successful sign-in, fetch user info
+      const meResponse = await axios.get('http://localhost:5000/api/me', {
+        withCredentials: true,
       });
 
-      // Save token
-      localStorage.setItem('authToken', response.data.token);
+      const user = meResponse.data.user;
+      const firstLetter = user.fullName?.charAt(0).toUpperCase();
 
-      // Save First Letter from Email (or you can save full name if your backend returns it)
-      const firstLetter = email.charAt(0).toUpperCase();
-      localStorage.setItem('firstLetter', firstLetter);
+      if (firstLetter) {
+        Cookies.set('firstLetter', firstLetter);
+        window.dispatchEvent(new Event('firstLetterUpdated'));
+      }
 
-      // Redirect
-      router.push('/Package');
-      
+      // Navigate to Package page after successful login and data fetch
+      router.push('/Package'); // Direct navigation
+
     } catch (error) {
       console.error('Sign-in error:', error);
-      setErrorMessage(error.response?.data?.message || 'Invalid credentials, please try again.');
+
+      // Handle errors (e.g. incorrect credentials, server error)
+      if (error.response) {
+        console.error('Response error data:', error.response.data);
+        setErrorMessage(error.response.data.message || 'Invalid credentials, please try again.');
+      } else {
+        setErrorMessage('Network error. Please try again later.');
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-    
       <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden relative z-10 p-6 md:p-10 mt-[-80px]">
-        
         {/* Left Section */}
         <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-white p-6">
           <div className="flex items-center justify-center mb-6 space-x-3">
-            <img 
+            <img
               src="/backgroundimage.png"
               alt="Insa Logo"
               className="h-10 w-10 object-contain"
@@ -52,13 +70,13 @@ export default function SignIn() {
               WELCOME
             </h2>
           </div>
-    
+
           <p className="text-gray-600 text-center mb-6">Please enter your details to sign in.</p>
-    
+
           {errorMessage && (
             <div className="mb-4 text-red-600 text-center text-sm">{errorMessage}</div>
           )}
-    
+
           <form onSubmit={handleSubmit} className="w-full space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm text-gray-700 mb-1">Email</label>
@@ -72,7 +90,7 @@ export default function SignIn() {
                 required
               />
             </div>
-    
+
             <div>
               <label htmlFor="password" className="block text-sm text-gray-700 mb-1">Password</label>
               <input
@@ -85,7 +103,7 @@ export default function SignIn() {
                 required
               />
             </div>
-    
+
             <div className="flex justify-center items-center space-x-12 mt-4 text-sm">
               <a href="#" className="text-blue-600 hover:underline">
                 Forgot password?
@@ -97,16 +115,16 @@ export default function SignIn() {
                 </a>
               </p>
             </div>
-    
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-500 transition mt-6"
             >
               Log In
             </button>
           </form>
         </div>
-    
+
         {/* Right Section - Animated Image */}
         <div className="hidden md:flex items-center justify-center bg-white w-1/2 p-4">
           <motion.img
@@ -122,7 +140,6 @@ export default function SignIn() {
             }}
           />
         </div>
-    
       </div>
     </div>
   );
