@@ -109,7 +109,7 @@ const View = () => {
 
   // Define the handleViewMore function
   const handleViewMore = () => {
-    router.push('/view-request'); // Navigate to the view-request page
+    router.push('/DirectorGeneral/view-request'); // Navigate to the view-request page
   };
 
   return (

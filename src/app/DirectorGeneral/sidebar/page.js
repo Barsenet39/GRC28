@@ -70,16 +70,16 @@ export default function Sidebar() {
           <ul>
             <li className="mb-4 flex items-center">
               <HomeIcon className={`w-6 h-6 mr-2 ${isDarkMode ? 'text-white' : 'text-blue-600'}`} />
-              <a href="/dashboard" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>Dashboard</a>
+              <a href="/DirectorGeneral/dashboard" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>Dashboard</a>
             </li>
             <li className="mb-4 flex items-center">
               <PlusIcon className={`w-6 h-6 mr-2 ${isDarkMode ? 'text-white' : 'text-green-500'}`} />
-              <a href="/new-request" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>New Request</a>
+              <a href="/DirectorGeneral/new-request" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>New Request</a>
               {isOpen && <span className="ml-2 bg-red-500 rounded-full text-xs px-2 text-white">49</span>}
             </li>
             <li className="mb-4 flex items-center">
               <DocumentTextIcon className={`w-6 h-6 mr-2 ${isDarkMode ? 'text-white' : 'text-indigo-600'}`} />
-              <a href="/request-status" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>Requests Status</a>
+              <a href="/DirectorGeneral/request-status" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>Requests Status</a>
             </li>
           </ul>
         </div>
@@ -124,7 +124,7 @@ export default function Sidebar() {
                 <UserIcon className={`w-6 h-6 mr-2 ${isDarkMode ? 'text-white' : 'text-purple-600'}`} />
                 <div>
                   <a href="/profile" className={`text-lg hover:text-gray-600 ${isOpen ? 'block' : 'hidden'}`}>Barenet Asfaw</a>
-                  <div className={`text-sm ${isOpen ? 'block' : 'hidden'}`}>Professional</div>
+                  <div className={`text-sm ${isOpen ? 'block' : 'hidden'}`}>Director General</div>
                 </div>
               </div>
               {isOpen && (

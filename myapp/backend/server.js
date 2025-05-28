@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-
+import nodemailer from 'nodemailer';
 import signupRoutes from './routes/signup.js';
 import signinRoutes from './routes/signin.js';
 import meRoute from './routes/me.js';
@@ -72,6 +72,45 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
+
+
+// Your forgot-password endpoint
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+  const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Reset your password',
+      text: 'Here is your password reset link: https://your-app.com/reset-password',
+    };
+
+    console.log(`📨 Attempting to send email to ${email}`);
+    await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully');
+
+    return res.status(200).json({ message: 'Email sent' });
+  } catch (error) {
+    console.error('❌ Email error:', error.message);
+    return res.status(500).json({ message: 'Failed to send email' });
+  }
+});
+
+
+
+
+
+
 
 // Start server
 const PORT = process.env.PORT || 5000;

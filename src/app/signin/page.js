@@ -15,71 +15,88 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('Sign-in data:', { email, password });
-
     try {
-      // Send the POST request for signing in
       const response = await axios.post(
-        'http://localhost:5000/api/signin', 
+        'http://localhost:5000/api/signin',
         { email, password },
         { withCredentials: true }
       );
-      console.log('Sign-in response:', response);
 
-      // After successful sign-in, fetch user info
-      const meResponse = await axios.get('http://localhost:5000/api/me', {
-        withCredentials: true,
-      });
+      const user = response.data;
+      console.log('User role received:', user.role);
 
-      const user = meResponse.data.user;
-      const firstLetter = user.fullName?.charAt(0).toUpperCase();
+      const role = user.role;
 
-      if (firstLetter) {
-        Cookies.set('firstLetter', firstLetter);
-        window.dispatchEvent(new Event('firstLetterUpdated'));
+      switch (role) {
+        case 'customer':
+          router.push('/Customer/home');
+          break;
+        case 'Director_General':
+          router.push('/DirectorGeneral/dashboard');
+          break;
+        case 'Deputy_Director':
+          router.push('/Deputy_Director/dashboard');
+          break;
+        case 'Directorate_Director1':
+          router.push('/dashboard2');
+          break;
+        case 'Directorate_Director2':
+          router.push('/dashboard3');
+          break;
+        case 'Division_Head_CSM':
+          router.push('/dashboard4');
+          break;
+        case 'Division_Head_CSRM':
+          router.push('/dashboard5');
+          break;
+        case 'Division_Head2':
+          router.push('/dashboard6');
+          break;
+        case 'Expert':
+        case 'Technical_Manager':
+        case 'Project_Manager':
+          router.push('/dashboard');
+          break;
+        default:
+          setErrorMessage('Unauthorized role. Please contact support.');
+          break;
       }
-
-      // Navigate to Package page after successful login and data fetch
-      router.push('/Package'); // Direct navigation
-
     } catch (error) {
       console.error('Sign-in error:', error);
-
-      // Handle errors (e.g. incorrect credentials, server error)
-      if (error.response) {
-        console.error('Response error data:', error.response.data);
-        setErrorMessage(error.response.data.message || 'Invalid credentials, please try again.');
-      } else {
-        setErrorMessage('Network error. Please try again later.');
-      }
+      setErrorMessage(
+        error.response?.data?.message || 'Failed to sign in. Please try again.'
+      );
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden relative z-10 p-6 md:p-10 mt-[-80px]">
+      <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden p-6 md:p-10 mt-[-80px] bg-white shadow-md rounded-lg">
         {/* Left Section */}
-        <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-white p-6">
+        <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-6">
           <div className="flex items-center justify-center mb-6 space-x-3">
-            <img
-              src="/backgroundimage.png"
-              alt="Insa Logo"
-              className="h-10 w-10 object-contain"
-            />
-            <h2 className="text-3xl font-bold text-gray-900">
-              WELCOME
-            </h2>
+            <img src="/backgroundimage.png" alt="Logo" className="h-10 w-10 object-contain" />
+            <h2 className="text-3xl font-bold text-gray-900">WELCOME</h2>
           </div>
 
           <p className="text-gray-600 text-center mb-6">Please enter your details to sign in.</p>
 
           {errorMessage && (
-            <div className="mb-4 text-red-600 text-center text-sm">{errorMessage}</div>
+            <motion.div
+              className="mb-4 text-red-600 text-center text-sm font-medium p-3 bg-red-100 rounded-lg"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {errorMessage}
+            </motion.div>
           )}
 
           <form onSubmit={handleSubmit} className="w-full space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm text-gray-700 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm text-gray-700 mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
@@ -92,7 +109,9 @@ export default function SignIn() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm text-gray-700 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm text-gray-700 mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 id="password"
@@ -104,8 +123,8 @@ export default function SignIn() {
               />
             </div>
 
-            <div className="flex justify-center items-center space-x-12 mt-4 text-sm">
-              <a href="#" className="text-blue-600 hover:underline">
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <a href="/Forget_Password" className="text-blue-600 hover:underline">
                 Forgot password?
               </a>
               <p className="text-gray-700">
@@ -126,7 +145,7 @@ export default function SignIn() {
         </div>
 
         {/* Right Section - Animated Image */}
-        <div className="hidden md:flex items-center justify-center bg-white w-1/2 p-4">
+        <div className="hidden md:flex items-center justify-center w-1/2 p-4">
           <motion.img
             src="/signin1.png"
             alt="Signin Illustration"

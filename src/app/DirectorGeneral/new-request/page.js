@@ -30,7 +30,7 @@ const View = () => {
 
   // Function to handle redirection to view-request page
   const handleViewMore = () => {
-    router.push('/view-request');
+    router.push('/DirectorGeneral/view-request');
   };
 
   return (
