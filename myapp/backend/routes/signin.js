@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
+ 
   const { email, password } = req.body;
 
   console.log('🔐 Sign-in attempt:', { email });
@@ -43,21 +44,26 @@ router.post('/', async (req, res) => {
       path: '/',
     });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'Lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-    });
+res.cookie('token', token, {
+  httpOnly: true,
+  sameSite: 'Lax',
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+});
+
 
     // ✅ Return flattened user data so frontend can directly access role
-    res.status(200).json({
-      message: 'Login successful',
-      role: user.role, // <--- Flattened for frontend
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-    });
+res.status(200).json({
+  message: 'Login successful',
+  token,        // <--- JWT token here
+  role: user.role,
+  _id: user._id,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  companyName: user.companyName,
+});
+
 
   } catch (error) {
     console.error('❌ Sign-in server error:', error);

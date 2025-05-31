@@ -119,35 +119,37 @@ const View = () => {
 
   {/* GRC Modern Section */}
   <div className="relative flex flex-col md:flex-row items-start gap-10 z-10 py-10 px-4 md:px-12">
-    {/* Text Section */}
-    <div className="md:w-2/3 space-y-6" data-aos="fade-right">
-      <h2 className="text-4xl md:text-6xl font-extrabold text-black leading-tight">
-        Governance Risk Compliance.
-      </h2>
-      <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-  A streamlined governance, risk, and compliance (GRC) approach designed to simplify enterprise protection, enhance visibility across operations, support regulatory readiness, and ensure you're well-prepared for whatever challenges lie ahead.
-</p>
 
-      {/* Abstract Content Blocks */}
-      <div className="space-y-4">
-        <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
-          <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
-          <p className="text-sm text-gray-600">
-            Build resilient frameworks aligned with your business goals and compliance needs.
-          </p>
-        </div>
-        
-   
- {/* ✨ Beautiful "Get Started" Button */}
- <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
- <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
-          <p className="text-sm text-gray-600">
-            Build resilient frameworks aligned with your business goals and compliance needs.
-          </p>
-  </div>
-  </div>
+   {/* Text Section */}
+   <div className="md:w-2/3 space-y-6" data-aos="fade-right">
+    <h2 className="text-4xl md:text-6xl font-extrabold text-black leading-tight">
+    Governance Risk Compliance.
+     </h2>
+  <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+    A streamlined governance, risk, and compliance (GRC) approach designed to simplify enterprise protection, enhance visibility across operations, support regulatory readiness, and ensure you're well-prepared for whatever challenges lie ahead.
+  </p>
 
+  {/* Abstract Content Blocks */}
+  <div className="space-y-4">
+    <div className="bg-gray-100 p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
+      <h4 className="text-black font-semibold mb-1">Strategic Governance</h4>
+      <p className="text-sm text-gray-600">
+        Build resilient frameworks aligned with your business goals and compliance needs.
+      </p>
     </div>
+
+    {/* Duplicate block removed - assuming the second one was accidental */}
+  </div>
+
+  {/* ✨ Beautiful "Get Started" Button */}
+  <button
+    onClick={() => router.push("/Customer/Package")}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-5 rounded-full transition"
+  >
+    Get Started
+  </button>
+   </div>
+
 
     {/* Video Section */}
     <div className="w-full flex justify-start pt-4 md:pt-16" data-aos="fade-left">

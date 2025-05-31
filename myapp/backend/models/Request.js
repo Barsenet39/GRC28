@@ -1,27 +1,18 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const RequestSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  filename: {
-    type: String,
-    required: true,
-  },
-  fileUrl: {
-    type: String,
-    required: true,
-  },
-  services: [{ // 👈 add this
-    type: String,
-    required: true,
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now,
+const requestSchema = new mongoose.Schema({
+  userId: String,
+  requestId: { type: String, unique: true },
+  companyName: String,
+  date: String,
+  type: String,
+  status: String,
+  services: Array,
+  file: {
+    data: Buffer,
+    filename: String,
+    contentType: String,
   },
 });
 
-export default mongoose.models.Request || mongoose.model("Request", RequestSchema);
+export default mongoose.model("Request", requestSchema);

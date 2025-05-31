@@ -2,30 +2,35 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import axios from 'axios';
+import axios from "axios";
 
 const View = () => {
   const router = useRouter();
-  useEffect(() => {
-    fetch('http://localhost:5000/api/riskmanagement', {
-      credentials: 'include',
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          router.push('/signin');
-        }
-      })
-      .catch((err) => {
-        console.error('Auth check failed', err);
-        router.push('/signin');
-      });
-  }, []);
-  
-    const [selectedFile, setSelectedFile] = useState(null);
-
   const [selectedCards, setSelectedCards] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
- 
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/riskmanagement", {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          router.push("/signin");
+          return;
+        }
+        const data = await res.json();
+        setCurrentUserId(data._id);
+      } catch (err) {
+        console.error("Auth check failed", err);
+        router.push("/signin");
+      }
+    };
+
+    fetchUser();
+  }, [router]);
+
   const riskCards = [
     {
       id: 7,
@@ -117,11 +122,7 @@ const View = () => {
     },
   ];
 
-  // Store riskCards in localStorage on mount
-  useEffect(() => {
-    localStorage.setItem("riskCards", JSON.stringify(riskCards));
-  }, []);
-
+ 
   const handleSelect = (id) => {
     setSelectedCards((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -137,61 +138,72 @@ const View = () => {
     }
   };
 
+ 
+
+    const selectedData = selectedCards.map((id) => {
+      const card = riskCards.find((c) => c.id === id);
+      const costMatch = card?.description.match(/up to ([\d,]+ ETB)/i);
+      return {
+        mainTitle: card?.mainTitle || "",
+        category: card?.section || "",
+        subCategory: card?.title || "",
+        item: { name: card?.title || "", cost: costMatch ? costMatch[1] : "Unknown" },
+        id,
+      };
+    });
+
+    const grouped = {};
+    selectedData.forEach(({ mainTitle, category, subCategory, item }) => {
+      const key = `${mainTitle}||${category}||${subCategory}`;
+      if (!grouped[key]) grouped[key] = { mainTitle, category, subCategory, items: [] };
+      grouped[key].items.push(item);
+    });
+
+    const services = Object.values(grouped);
+ 
 const handleSubmit = async () => {
   if (!uploadedFile) {
     alert("Please upload a file before submitting.");
     return;
   }
 
-  const selectedData = selectedCards.map((id) => {
-    const card = riskCards.find((c) => c.id === id);
-    const costMatch = card?.description.match(/up to ([\d,]+ ETB)/i);
-    return {
-      mainTitle: card?.mainTitle || "",
-      category: card?.section || "",
-      subCategory: card?.title || "",
-      item: { name: card?.title || "", cost: costMatch ? costMatch[1] : "Unknown" },
-      id,
-    };
-  });
-
-  const grouped = {};
-  selectedData.forEach(({ mainTitle, category, subCategory, item }) => {
-    const key = `${mainTitle}||${category}||${subCategory}`;
-    if (!grouped[key]) grouped[key] = { mainTitle, category, subCategory, items: [] };
-    grouped[key].items.push(item);
-  });
-  const services = Object.values(grouped);
-
-
-  
-  const requestId = `GRC/${Math.floor(100000 + Math.random() * 900000)}`;
+const requestId = `GRC/${Math.floor(100000 + Math.random() * 900000)}`;
+console.log("🧾 Generated Request ID:", requestId); // <--- ADD THIS
 
   const formData = new FormData();
+
+  formData.append("userId", currentUserId);
   formData.append("requestId", requestId);
   formData.append("companyName", localStorage.getItem("companyName") || "Adama Science and Technology University");
   formData.append("date", new Date().toISOString().split("T")[0]);
   formData.append("type", "Project");
   formData.append("status", "Requested");
-  formData.append("services", JSON.stringify(services));
-formData.append("file1", uploadedFile);
+  formData.append("services", JSON.stringify(selectedCards));
 
-
+  formData.append("file1", uploadedFile);
 
   try {
-    const response = await axios.post('http://localhost:5000/api/uploads', formData, {
+    const response = await axios.post("http://localhost:5000/api/uploads", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       withCredentials: true,
     });
     console.log("Upload response:", response.data);
-
     alert("Form submitted!");
-    router.push("/Requests?id=" + encodeURIComponent(requestId));
+   
+         localStorage.setItem("lastSubmittedRequestId", requestId);
+    router.push("/Customer/Requests?id=" + encodeURIComponent(requestId));
+
+    // >>> Your additional logic goes here <<<
+    // Example: Logging the submitted requestId to localStorage
+    localStorage.setItem("lastSubmittedRequestId", requestId);
+
   } catch (error) {
     console.error("Upload failed:", error);
     alert("Something went wrong. Please try again later.");
   }
 };
+
+
 
 
 

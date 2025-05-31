@@ -155,13 +155,14 @@ console.log("🧾 Generated Request ID:", requestId); // <--- ADD THIS
 
   formData.append("userId", currentUserId);
   formData.append("requestId", requestId);
-  formData.append("companyName", localStorage.getItem("companyName") || "Adama Science and Technology University");
+  formData.append("companyName", localStorage.getItem("companyName"));
   formData.append("date", new Date().toISOString().split("T")[0]);
   formData.append("type", "Project");
   formData.append("status", "Requested");
   formData.append("services", JSON.stringify(selectedCards));
 
   formData.append("file1", uploadedFile);
+localStorage.setItem("currentUserId", data._id);
 
   try {
     const response = await axios.post("http://localhost:5000/api/uploads", formData, {
@@ -172,7 +173,7 @@ console.log("🧾 Generated Request ID:", requestId); // <--- ADD THIS
     alert("Form submitted!");
    
          localStorage.setItem("lastSubmittedRequestId", requestId);
-    router.push("/Requests?id=" + encodeURIComponent(requestId));
+    router.push("/Customer/Requests?id=" + encodeURIComponent(requestId));
 
     // >>> Your additional logic goes here <<<
     // Example: Logging the submitted requestId to localStorage

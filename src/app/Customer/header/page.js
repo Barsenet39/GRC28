@@ -42,14 +42,14 @@ const Header = () => {
    };
 
    const navLinks = [
-    ["Home", "/", HomeIcon],
+    ["Home", "/Customer/home", HomeIcon],
     ["Service", "#services", BriefcaseIcon],
     ["Help", "#how-to-apply", QuestionMarkCircleIcon],
     ["Contact", "#contact", PhoneIcon],
     ...(firstLetter
       ? [
-          ["Requests", "/Requests", ClipboardListIcon],
-          ["Package", "/Package", CubeIcon],
+          ["Requests", "/Customer/Requests", ClipboardListIcon],
+          
         ]
       : []),
    ];
@@ -79,6 +79,12 @@ const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+                  onClick={() => router.push("/Customer/Package")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full transition"
+                >
+                  Get Started
+                </button>
             {firstLetter ? (
               <div className="relative group">
                 <div
@@ -114,18 +120,8 @@ const Header = () => {
               </div>
             ) : (
               <>
-                <button
-                  onClick={() => router.push("/signin")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full transition"
-                >
-                  Get Started
-                </button>
-                <button
-                  onClick={() => router.push("/signup")}
-                  className="border border-purple-600 text-purple-600 px-5 py-2 rounded-full hover:bg-purple-50 transition"
-                >
-                  Sign Up
-                </button>
+                
+               
               </>
             )}
           </div>

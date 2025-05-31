@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { motion } from 'framer-motion';
 
 export default function SignIn() {
@@ -23,11 +22,19 @@ export default function SignIn() {
       );
 
       const user = response.data;
+
+      // Store JWT token locally for authorization in future requests
+      if (user.token) {
+        localStorage.setItem('token', user.token);
+      }
+      if (user._id) localStorage.setItem('currentUserId', user._id);
+      if (user.role) localStorage.setItem('userRole', user.role);
+      if (user.companyName) localStorage.setItem('companyName', user.companyName);
+
       console.log('User role received:', user.role);
 
-      const role = user.role;
-
-      switch (role) {
+      // Redirect based on user role
+      switch (user.role) {
         case 'customer':
           router.push('/Customer/home');
           break;

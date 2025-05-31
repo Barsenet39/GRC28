@@ -124,11 +124,11 @@ const View = () => {
             "bg-green-100",
             "bg-yellow-100",
             "bg-purple-100",
-            "bg-red-100"
-          ];
+            "bg-red-100"  ]
+            ;
           return (
-<div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-5 gap-4 mb-6">
-{Object.entries(projectData).map(([key, value], idx) => (
+          <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-5 gap-4 mb-6">
+           {Object.entries(projectData).map(([key, value], idx) => (
                 <div
                   key={key}
                   className={`p-4 rounded-lg shadow-md flex flex-col justify-center items-start ${colors[idx % colors.length]}`} // Reduced padding

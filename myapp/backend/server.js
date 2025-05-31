@@ -6,23 +6,24 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import nodemailer from 'nodemailer';
+
+// Import routes
 import signupRoutes from './routes/signup.js';
 import signinRoutes from './routes/signin.js';
-import meRoute from './routes/me.js';
-import uploadsRoutes from './routes/uploads.js'; // ✅ updated route
+import authRoutes from './routes/auth.js';
+import requestsRoutes from './routes/requests.js';
 import riskRoutes from './routes/riskmanagement.js';
+import userRoutes from './routes/user.js';
+import { authenticateUser } from './middleware/authMiddleware.js';
 
 dotenv.config();
 
 const app = express();
-const router = express.Router();
+
 // MongoDB connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connected');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
@@ -31,62 +32,45 @@ const connectDB = async () => {
 };
 connectDB();
 
-
-
-
-
-
-// DB connect
-mongoose.connect("mongodb://localhost:5000/uploads", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected ✅"))
-.catch((err) => console.error("MongoDB error ❌", err));
 // Middleware
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use("/api/uploads", uploadsRoutes);
+
 // Routes
-app.use('/api', meRoute);
+
 app.use('/api/signup', signupRoutes);
 app.use('/api/signin', signinRoutes);
-app.use('/api', meRoute);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/requests', requestsRoutes);
 app.use('/api/riskmanagement', riskRoutes);
-// Default routes
+
+// Default route
 app.get('/', (req, res) => {
   res.send('✅ Server is running');
-})
+});
+
 app.get('/api/risks', (req, res) => {
   res.json({ status: 'OK' });
 });
-// Example in Express.js
-app.get('/api/me', (req, res) => {
-  // check user session/auth token and return user info
-});
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: err.message || 'Internal Server Error' });
-});
-
-
-// Your forgot-password endpoint
+// Forgot-password endpoint
 app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
 
   try {
-  const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -106,9 +90,11 @@ app.post('/api/forgot-password', async (req, res) => {
   }
 });
 
-
-
-
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
 
 
 

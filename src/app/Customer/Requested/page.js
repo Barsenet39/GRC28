@@ -1,6 +1,7 @@
 // File: src/app/Requested/page.js
 
 "use client";
+import axios from 'axios';
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,14 +10,27 @@ import { FaDownload, FaEye, FaCalendarAlt, FaTools, FaFileAlt } from "react-icon
 const View = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
+const [requests, setRequests] = useState([]);
 
   const [riskCards, setRiskCards] = useState([]);
   const [request, setRequest] = useState(null);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("riskCards") || "[]");
-    setRiskCards(stored);
-  }, []);
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/requests", {
+        withCredentials: true,
+      });
+      setRequests(res.data);
+      localStorage.setItem("requests", JSON.stringify(res.data)); // ✅ Save here
+    } catch (err) {
+      console.error("Failed to fetch user requests:", err);
+    }
+  };
+
+  fetchRequests();
+}, []);
+
 
   useEffect(() => {
     if (!id) return;

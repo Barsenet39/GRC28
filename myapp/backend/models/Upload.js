@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
 const uploadSchema = new mongoose.Schema({
- requestId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  filename: String,
-  url: String,
+  requestId: String,
+  companyName: String,
+  date: String,
   type: String,
   status: String,
-  date: { type: Date, default: Date.now }
+  userId: String,
+  services: [String],
+  filePaths: [String], // If you save paths to uploaded files
 });
-
 export default mongoose.model('Upload', uploadSchema);

@@ -2,7 +2,7 @@ requests.js
 
 const express = require('express');
 const router = express.Router();
-const requireAuth = require('../middlewares/authMiddleware');
+const requireAuth = require('../middleware/authMiddleware');
 
 // Protect all routes in this file
 router.use(requireAuth);

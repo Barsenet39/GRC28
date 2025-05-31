@@ -1,32 +1,16 @@
-const router = require("express").Router();
-const userController = require("../controllers/userController");
-const { verifyTokenAndAuthorization } = require("../middlewares/verifyToken");
+import express from 'express';
+import User from '../models/User.js'; // Adjust path to your User model
 
-// UPADATE USER
-router.put("/", verifyTokenAndAuthorization, userController.updateUser);
+const router = express.Router();
 
-router.get(
-  "/verify/:otp",
-  verifyTokenAndAuthorization,
-  userController.verifyAccount
-);
-router.get("/customer_service", userController.getAdminNumber);
-router.post(
-  "/feedback",
-  verifyTokenAndAuthorization,
-  userController.userFeedback
-);
-router.get(
-  "/verify_phone/:phone",
-  verifyTokenAndAuthorization,
-  userController.verifyPhone
-);
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('companyName');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-router.delete("/", verifyTokenAndAuthorization, userController.deleteUser);
-router.get("/", verifyTokenAndAuthorization, userController.getUser);
-router.get("/dg", verifyTokenAndAuthorization, userController.getGeneralD);
-router.get("/sgd", verifyTokenAndAuthorization, userController.getSubGeneralD);
-router.get("/dh", verifyTokenAndAuthorization, userController.getDH);
-router.get("/dd", verifyTokenAndAuthorization, userController.getDD);
-
-module.exports = router;
+export default router;
