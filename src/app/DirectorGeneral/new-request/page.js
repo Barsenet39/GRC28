@@ -72,7 +72,7 @@ const View = () => {
   };
 
   const handleViewMore = (id) => {
-    router.push(`../Director_General/view-request?id=${id}`);
+    router.push(`../DirectorGeneral/view-request?id=${id}`);
   };
 
   return (
@@ -116,46 +116,42 @@ const View = () => {
               </tr>
             </thead>
             <tbody className="text-gray-600 text-sm font-light">
-              {requests.map((request) => (
-                <tr key={request.requestId} className="border-b border-gray-200 hover:bg-gray-100">
-                  <td className="py-3 px-6 text-left font-semibold">{request.requestId}</td>
-                  <td className="py-3 px-6 text-left font-bold">{request.companyName}</td>
-                  <td className="py-3 px-6 text-left font-semibold">
-                    <FaCalendarAlt className="inline-block mr-1 text-primary" />
-                    {request.date}
-                  </td>
-                  <td className="py-3 px-6 text-center font-semibold">
-                    {request.services ? request.services.reduce((sum, s) => sum + (s.items?.length || 0), 0) : 0}
-                  </td>
-                  <td className="py-3 px-6 text-left font-semibold">
-                    {request.type === 'Project' ? (
-                      <FaFileAlt className="inline-block mr-1 text-green-500" />
-                    ) : (
-                      <FaEye className="inline-block mr-1 text-orange-500" />
-                    )}
-                    {request.type}
-                  </td>
-                  <td className="py-3 px-6 text-left font-semibold">
-                    <span className={`inline-block w-20 text-center py-1 text-white text-xs font-semibold rounded-full shadow ${
-                      request.status === 'Requested' ? 'bg-blue-600' :
-                      request.status === 'Accepted' ? 'bg-green-600' :
-                      request.status === 'Closed' ? 'bg-gray-600' :
-                      request.status === 'Expired' ? 'bg-yellow-600' :
-                      request.status === 'Rejected' ? 'bg-red-600' : 'bg-gray-400'
-                    }`}>
-                      {request.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-6 text-left">
-                    <button
-                      className="bg-blue-500 text-white py-1.5 px-3 text-xs rounded-full shadow-md hover:bg-blue-600 transition duration-300 transform hover:scale-105 whitespace-nowrap"
-                      onClick={() => handleViewMore(request.requestId)}
-                    >
-                      View More
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {requests
+                .filter((request) => request.status === 'Requested') // Filter for "Requested" status
+                .map((request) => (
+                  <tr key={request.requestId} className="border-b border-gray-200 hover:bg-gray-100">
+                    <td className="py-3 px-6 text-left font-semibold">{request.requestId}</td>
+                    <td className="py-3 px-6 text-left font-bold">{request.companyName}</td>
+                    <td className="py-3 px-6 text-left font-semibold">
+                      <FaCalendarAlt className="inline-block mr-1 text-primary" />
+                      {request.date}
+                    </td>
+                    <td className="py-3 px-6 text-center font-semibold">
+                      {request.services ? request.services.reduce((sum, s) => sum + (s.items?.length || 0), 0) : 0}
+                    </td>
+                    <td className="py-3 px-6 text-left font-semibold">
+                      {request.type === 'Project' ? (
+                        <FaFileAlt className="inline-block mr-1 text-green-500" />
+                      ) : (
+                        <FaEye className="inline-block mr-1 text-orange-500" />
+                      )}
+                      {request.type}
+                    </td>
+                    <td className="py-3 px-6 text-left font-semibold">
+                      <span className="inline-block w-20 text-center py-1 text-white text-xs font-semibold rounded-full shadow bg-blue-600">
+                        {request.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-6 text-left">
+                      <button
+                        className="bg-blue-500 text-white py-1.5 px-3 text-xs rounded-full shadow-md hover:bg-blue-600 transition duration-300 transform hover:scale-105 whitespace-nowrap"
+                        onClick={() => handleViewMore(request.requestId)}
+                      >
+                        View More
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

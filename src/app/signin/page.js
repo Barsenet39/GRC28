@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 export default function SignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -16,24 +16,18 @@ export default function SignIn() {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/signin',
-        { email, password },
+        '/api/signin',
+        { companyEmail, password },
         { withCredentials: true }
       );
 
       const user = response.data;
 
-      // Store JWT token locally for authorization in future requests
-      if (user.token) {
-        localStorage.setItem('token', user.token);
-      }
-      if (user._id) localStorage.setItem('currentUserId', user._id);
+      if (user.token) localStorage.setItem('token', user.token);
+      if (user._id) localStorage.setItem('userId', user._id);
       if (user.role) localStorage.setItem('userRole', user.role);
       if (user.companyName) localStorage.setItem('companyName', user.companyName);
 
-      console.log('User role received:', user.role);
-
-      // Redirect based on user role
       switch (user.role) {
         case 'customer':
           router.push('/Customer/home');
@@ -101,16 +95,16 @@ export default function SignIn() {
 
           <form onSubmit={handleSubmit} className="w-full space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm text-gray-700 mb-1">
-                Email
+              <label htmlFor="companyEmail" className="block text-sm text-gray-700 mb-1">
+                Company Email
               </label>
               <input
                 type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="companyEmail"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 text-black"
-                placeholder="Enter your email"
+                placeholder="Enter your company email"
                 required
               />
             </div>

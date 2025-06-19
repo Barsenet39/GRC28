@@ -1,13 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: {}, // ✅ Fix: Changed from true to object
+    serverActions: {}, // your existing config
   },
-  allowedDevOrigins: [
-    'http://localhost:3000',
-    
-  ],
- 
+  allowedDevOrigins: ['http://localhost:3000'],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:5000/api/:path*', // Proxy all API calls
+      },
+    ];
+  },
 };
 
 export default nextConfig;

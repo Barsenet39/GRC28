@@ -1,172 +1,211 @@
-import mongoose from "mongoose";
-import express from "express";
-import multer from "multer";
-import Joi from "joi";
-import Request from "../models/Request.js";
-import { authenticateUser } from "../middleware/authMiddleware.js";
+import express from 'express';
+import multer from 'multer';
+import Joi from 'joi';
+import path from 'path';
+import fs from 'fs';
+import { authenticateUser } from '../middleware/authMiddleware.js';
+import Request from '../models/Request.js';
+import User from '../models/User.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
-const storage = multer.memoryStorage();
+// Ensure uploads directory exists
+const uploadDir = path.join('uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+// Multer config for PDF uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const cleanName = file.originalname.replace(/\s+/g, '-');
+    cb(null, `${timestamp}-${cleanName}`);
+  },
+});
+
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype !== "application/pdf") {
-      return cb(new Error("Only PDF files are allowed"), false);
+    if (file.mimetype !== 'application/pdf') {
+      return cb(new Error('Only PDF files are allowed'), false);
     }
     cb(null, true);
   },
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-});
+}).fields([
+  { name: 'letterFile', maxCount: 1 },
+  { name: 'projectFile', maxCount: 1 },
+]);
 
+// Joi validation schema for services
 const serviceSchema = Joi.object({
-  mainTitle: Joi.string().required(),
-  category: Joi.string().required(),
-  subCategory: Joi.string().required(),
+  mainTitle: Joi.string().trim().required(),
+  category: Joi.string().trim().required(),
+  subCategory: Joi.string().trim().required(),
   items: Joi.array()
     .items(
       Joi.object({
-        name: Joi.string().required(),
-        cost: Joi.string().required(),
+        name: Joi.string().trim().required(),
+        cost: Joi.string().trim().required(),
       })
     )
     .min(1)
     .required(),
 });
 
-const validateServices = (services) =>
-  Joi.array().items(serviceSchema).validate(services);
-
-const generateRequestId = async (attempts = 5) => {
-  for (let i = 0; i < attempts; i++) {
-    const randomId = `REG/${Math.floor(100000 + Math.random() * 900000)}`;
-    const exists = await Request.findOne({ requestId: randomId }).lean();
-    if (!exists) return randomId;
+// Generate unique requestId with retries
+const generateRequestId = async (maxAttempts = 10) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    const requestId = `REG/${Math.floor(100000 + Math.random() * 900000)}`;
+    const exists = await Request.findOne({ requestId }).lean();
+    if (!exists) return requestId;
   }
-  throw new Error("Failed to generate unique requestId");
+  throw new Error('Failed to generate unique requestId');
 };
 
-router.use(authenticateUser);
-
-router.post(
-  "/",
-  upload.fields([
-    { name: "letterFile", maxCount: 1 },
-    { name: "projectFile", maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-      const userId = req.user.userId;
-      const { companyName, date, type, status, services } = req.body;
-
-      const letterFile = req.files?.letterFile?.[0] || null;
-      const projectFile = req.files?.projectFile?.[0] || null;
-
-      if (!letterFile && !projectFile) {
-        return res.status(400).json({ error: "At least one PDF file is required" });
-      }
-
-      if (!services) {
-        return res.status(400).json({ error: "Services field is required" });
-      }
-
-      let parsedServices;
-      try {
-        parsedServices = JSON.parse(services);
-      } catch {
-        return res.status(400).json({ error: "Invalid JSON in services" });
-      }
-
-      const { error } = validateServices(parsedServices);
-      if (error) {
-        return res.status(400).json({ error: "Invalid services structure", details: error.details });
-      }
-
-      const requestId = await generateRequestId();
-
-      const files = {};
-      if (letterFile) {
-        files.letterFile = {
-          data: letterFile.buffer,
-          filename: letterFile.originalname.trim(),
-          contentType: letterFile.mimetype,
-        };
-      }
-      if (projectFile) {
-        files.projectFile = {
-          data: projectFile.buffer,
-          filename: projectFile.originalname.trim(),
-          contentType: projectFile.mimetype,
-        };
-      }
-
-      const newRequest = new Request({
-        userId: new mongoose.Types.ObjectId(userId),
-        requestId,
-        companyName: companyName?.trim(),
-        date: date || new Date().toISOString().split("T")[0],
-        type,
-        status,
-        services: parsedServices,
-        files,
-      });
-
-      await newRequest.save();
-
-      return res.status(201).json({
-        message: "Request submitted successfully",
-        requestId,
-      });
-    } catch (err) {
-      console.error("Error submitting request:", err);
-      return res.status(500).json({ error: "Server error submitting request" });
-    }
+// Multer error handler middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError || err) {
+    return res.status(400).json({ error: `File upload error: ${err.message}` });
   }
-);
+  next();
+};
 
-router.get("/", async (req, res) => {
+// POST /api/requests - submit a new request
+router.post('/', authenticateUser, upload, handleMulterError, async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const requests = await Request.find({ userId })
-      .select("-files.letterFile.data -files.projectFile.data")
-      .lean();
-    return res.status(200).json(requests);
-  } catch (err) {
-    console.error("Error fetching user requests:", err);
-    return res.status(500).json({ error: "Error fetching user requests" });
+    const user = await User.findById(req.user.id).lean();
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    const { services } = req.body;
+    const letterFile = req.files?.letterFile?.[0];
+    const projectFile = req.files?.projectFile?.[0];
+
+    if (!services || !letterFile || !projectFile) {
+      return res.status(400).json({ error: 'Services, letterFile, and projectFile are required' });
+    }
+
+    let parsedServices;
+    try {
+      parsedServices = JSON.parse(services);
+    } catch {
+      return res.status(400).json({ error: 'Invalid services JSON format' });
+    }
+
+    const { error } = Joi.array().items(serviceSchema).validate(parsedServices);
+    if (error) {
+      return res.status(400).json({ error: 'Invalid services structure', details: error.details });
+    }
+
+    const requestId = await generateRequestId();
+    const companyName = user.companyName?.trim() || 'Anonymous';
+const type = req.body.type === 'Technical Support' ? 'Technical Support' : 'Project';
+
+    const newRequest = new Request({
+  requestId,
+  userId: user.userId,
+  companyName,
+  companyPhone: user.companyPhone || '',
+  companyEmail: user.companyEmail || '',
+  businessType: user.businessType || '',
+  otherBusinessType: user.otherBusinessType || '',
+  companyAddress: user.companyAddress || '',
+  firstName: user.firstName || '',
+  lastName: user.lastName || '',
+  type,
+  status: 'Requested',
+  date: new Date(),
+  services: parsedServices,
+  files: {
+    letterFile: {
+      path: letterFile.path,
+      filename: letterFile.originalname.trim(),
+      contentType: letterFile.mimetype,
+    },
+    projectFile: {
+      path: projectFile.path,
+      filename: projectFile.originalname.trim(),
+      contentType: projectFile.mimetype,
+    },
+  },
+});
+
+
+    // Log to verify userId and the whole request data:
+console.log('Saving new request:', {
+  requestId: newRequest.requestId,
+  userId: newRequest.userId,
+  companyName: newRequest.companyName,
+  services: newRequest.services,
+  files: newRequest.files,
+});
+console.log('Body:', req.body);
+console.log('Files:', req.files);
+
+    await newRequest.save();
+
+    res.status(201).json({ message: 'Request submitted successfully', requestId });
+  } catch (error) {
+    console.error('POST /api/requests error:', error);
+    res.status(500).json({ error: 'Server error submitting request' });
   }
 });
 
-router.get("/:id", async (req, res) => {
+// GET /api/requests - get all requests for logged-in user
+router.get('/', authenticateUser, async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const id = req.params.id;
+    const user = await User.findById(req.user.id).lean();
+    if (!user || !user.userId) {
+      return res.status(401).json({ error: 'User not found' });
+    }
 
-    // Validate ObjectId before querying
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid request ID format" });
+    const userId = req.query.userId || user.userId;
+
+    const requests = await Request.find({ userId }).sort({ createdAt: -1 }).lean();
+
+    console.log(`GET /api/requests for userId: ${userId}`); // ✅ log before response
+    return res.status(200).json(requests);
+  } catch (err) {
+    console.error('GET /api/requests error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+// GET /api/requests/:id - get specific request by requestId
+// Updated route: GET /api/requests/id/:id
+router.get('/id/:id', authenticateUser, async (req, res) => {
+  try {
+    const decodedId = decodeURIComponent(req.params.id);
+
+    const user = await User.findById(req.user.id).lean();
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ error: 'Database unavailable' });
     }
 
     const request = await Request.findOne({
-      _id: id,
-      userId,
-    })
-      .select("-files.letterFile.data -files.projectFile.data")
-      .lean();
+      requestId: decodedId,
+      userId: user.userId,
+    }).lean();
 
     if (!request) {
-      return res.status(404).json({ error: "Request not found or access denied" });
+      return res.status(404).json({ error: 'Request not found' });
     }
 
-    return res.status(200).json(request);
-  } catch (err) {
-    console.error("Error fetching request:", err);
-    return res.status(500).json({ error: "Server error fetching request" });
+    res.status(200).json(request);
+  } catch (error) {
+    console.error(`GET /api/requests/id/${req.params.id} error:`, error);
+    res.status(500).json({ error: 'Server error fetching request' });
   }
 });
 
-router.get("/test-auth", authenticateUser, (req, res) => {
-  res.json({ message: "Token is valid", user: req.user });
-});
+
+
+
+
 
 export default router;

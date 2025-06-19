@@ -4,38 +4,8 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SERVICE_MAPPINGS = {
-  CSRM: [
-    {
-      category: 'Cyber Security Risk Management Service',
-      subCategory: 'Governance Document Development',
-      items: [{ name: 'Strategic Level Risk Assessment', cost: 'Up to 1,500,000' }],
-    },
-  ],
-  CSM: [
-    {
-      category: 'Cyber Security Management Service',
-      subCategory: 'Security Policy Enforcement',
-      items: [{ name: 'Security Protocol Implementation', cost: 'Up to 1,200,000' }],
-    },
-  ],
-  Both: [
-    {
-      category: 'Cyber Security Risk Management Service',
-      subCategory: 'Governance Document Development',
-      items: [{ name: 'Strategic Level Risk Assessment', cost: 'Up to 1,500,000' }],
-    },
-    {
-      category: 'Cyber Security Management Service',
-      subCategory: 'Security Policy Enforcement',
-      items: [{ name: 'Security Protocol Implementation', cost: 'Up to 1,200,000' }],
-    },
-  ],
-};
-
 const View = () => {
   const router = useRouter();
-
   const [letterFile, setLetterFile] = useState(null);
   const [projectFile, setProjectFile] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,12 +13,15 @@ const View = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState(false);
   const [requestType, setRequestType] = useState(null);
+  const [companyName, setcompanyName] = useState('');
 
+  // Check authentication
   useEffect(() => {
     const checkIfLoggedIn = async () => {
       try {
+        const token = localStorage.getItem('token');
         const { data } = await axios.get('http://localhost:5000/api/auth', {
-          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (!data.user) router.push('/signin');
       } catch {
@@ -58,8 +31,13 @@ const View = () => {
     checkIfLoggedIn();
   }, [router]);
 
-  const getCompanyName = () => localStorage.getItem('companyName')?.trim();
+  // Load organization name from local storage
+  useEffect(() => {
+    const companyName = localStorage.getItem('companyName')?.trim();
+    if (companyName) setcompanyName(companyName);
+  }, []);
 
+  // File validation
   const validateFile = (file, type) => {
     if (!file) return;
     if (file.type !== 'application/pdf') {
@@ -77,7 +55,6 @@ const View = () => {
   };
 
   const handleFileChange = (e, type) => validateFile(e.target.files[0], type);
-
   const handleDrop = (e, type) => {
     e.preventDefault();
     setDragging(false);
@@ -98,58 +75,54 @@ const View = () => {
   };
 
 const handleUpload = async () => {
-  if (!letterFile && !projectFile) {
-    setError('Please upload at least one file.');
+  const userId = localStorage.getItem('userId');
+  const token = localStorage.getItem('token');
+
+  if (!userId || !token) {
+    setError('You must be logged in to submit a request.');
     return;
   }
 
-  const newRequest = {
-    id: `GRC/${Math.floor(Math.random() * 1000000)}`,
-    companyName: getCompanyName(),
-    date: new Date().toISOString().split('T')[0],
-    type: requestType === 'technical-support' ? 'Technical Support' : 'Project',
-    status: 'Requested',
-    files: {
-      ...(letterFile && { [letterFile.name]: URL.createObjectURL(letterFile) }),
-      ...(projectFile && { [projectFile.name]: URL.createObjectURL(projectFile) }),
-    },
-  };
+  if (requestType === 'technical-support') {
+    if (!letterFile || !projectFile) {
+      setError('Both letter and project files are required.');
+      return;
+    }
+  }
 
   try {
     const formData = new FormData();
     if (letterFile) formData.append('letterFile', letterFile);
     if (projectFile) formData.append('projectFile', projectFile);
+    formData.append('companyName', companyName);
+    formData.append('type', requestType === 'technical-support' ? 'Technical Support' : 'Project');
+    formData.append('services', JSON.stringify([])); // placeholder for services
 
-    const userId = localStorage.getItem('userId');
-    formData.append('userId', userId);
-    formData.append('requestId', newRequest.id);
-    formData.append('companyName', newRequest.companyName);
-    formData.append('date', newRequest.date);
-    formData.append('type', newRequest.type);
-    formData.append('status', newRequest.status);
-    formData.append('services', JSON.stringify([]));
- const token = localStorage.getItem('token');
+    // Log file info before upload
+    console.log('Uploading files:');
+    if (letterFile) {
+      console.log('Letter File:', letterFile.name, letterFile.size, letterFile.type);
+    }
+    if (projectFile) {
+      console.log('Project File:', projectFile.name, projectFile.size, projectFile.type);
+    }
+    console.log('Other data:', { companyName, requestType });
 
     await axios.post('http://localhost:5000/api/requests', formData, {
-      withCredentials: true,
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
+     Authorization: `Bearer ${token}`,
       },
+       withCredentials: true,
     });
 
-
-    const storedRequests = JSON.parse(localStorage.getItem('requests') || '[]');
-    storedRequests.push(newRequest);
-    localStorage.setItem('requests', JSON.stringify(storedRequests));
-
+    setSuccessMessage(true);
     setLetterFile(null);
     setProjectFile(null);
-    setSuccessMessage(true);
     setError('');
-  } catch (error) {
-    console.error('Upload error:', error);
-    setError('Upload failed. Please try again.');
+  } catch (err) {
+    const msg = err?.response?.data?.error || err.message || 'Upload failed. Please try again.';
+    setError(msg);
   }
 };
 
@@ -158,6 +131,7 @@ const handleUpload = async () => {
 
   const handleProjectSelection = (key, route) => {
     setRequestType('project');
+    localStorage.setItem('projectSubtype', key); // 👈 Store project subtype (CSM, CSRM, Both)
     router.push(route);
   };
 
@@ -171,7 +145,6 @@ const handleUpload = async () => {
       {/* Technical Support Section */}
       <section className="w-full bg-gradient-to-b from-white to-blue-50 py-22 mt-8">
         <div className="container mx-auto px-8 max-w-6xl flex flex-col md:flex-row items-center gap-12">
-
           {/* Text Content */}
           <div className="md:w-1/2 text-center md:text-left">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Technical Support on Finished Project</h2>
@@ -181,7 +154,7 @@ const handleUpload = async () => {
             </p>
             <button
               onClick={() => {
-                setRequestType("technical-support");
+                setRequestType('technical-support');
                 setModalOpen(true);
               }}
               className="inline-flex items-center gap-3 bg-blue-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-all ease-in-out transform hover:scale-105"
@@ -205,19 +178,16 @@ const handleUpload = async () => {
         {modalOpen && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center px-6">
             <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg p-10 relative animate-fadeInUp transition-all ease-in-out transform">
-         
-
               {/* Success Message */}
               {successMessage ? (
                 <div className="mb-4 bg-green-100 text-green-700 p-6 rounded-lg text-center shadow-xl">
-                      {/* ✖ Close Button */}
-          <button
-            onClick={handleCloseModal1}
-         className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold focus:outline-none"
-          aria-label="Close modal"
-               >
-             &times;
-            </button>
+                  <button
+                    onClick={handleCloseModal1}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold focus:outline-none"
+                    aria-label="Close modal"
+                  >
+                    ×
+                  </button>
                   <p className="font-medium text-xl">Thank you! Your files were successfully uploaded!</p>
                   <p className="mt-2 text-lg">
                     We will review your request and get back to you within a few days. Please check the status of your request periodically.
@@ -229,27 +199,27 @@ const handleUpload = async () => {
 
                   {/* Letter File Upload */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">Letter File</label>
+                    <label className="block text-gray-700 font-medium mb-2">Letter File <span className="text-red-600">*</span></label>
                     <div
                       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                       onDragLeave={() => setDragging(false)}
-                      onDrop={(e) => handleDrop(e, "letter")}
-                      onClick={() => document.getElementById("letterInput").click()}
+                      onDrop={(e) => handleDrop(e, 'letter')}
+                      onClick={() => document.getElementById('letterInput').click()}
                       className={`border-2 rounded-xl p-6 mb-6 text-center cursor-pointer transition-all
-                        ${dragging ? "border-blue-500 bg-blue-50" : "border-dashed border-gray-300 bg-gray-50"}
+                        ${dragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 bg-gray-50'}
                         hover:shadow-xl hover:border-blue-400`}
                     >
                       <p className="text-gray-600">
                         {letterFile ? (
                           <span className="font-medium text-gray-800">{letterFile.name}</span>
                         ) : (
-                          "Drag & drop or click to upload your letter"
+                          'Drag & drop or click to upload your letter'
                         )}
                       </p>
                       <input
                         type="file"
                         id="letterInput"
-                        onChange={(e) => handleFileChange(e, "letter")}
+                        onChange={(e) => handleFileChange(e, 'letter')}
                         className="hidden"
                         accept="application/pdf"
                       />
@@ -258,27 +228,27 @@ const handleUpload = async () => {
 
                   {/* Project File Upload */}
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">Project File</label>
+                    <label className="block text-gray-700 font-medium mb-2">Project File <span className="text-red-600">*</span></label>
                     <div
                       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                       onDragLeave={() => setDragging(false)}
-                      onDrop={(e) => handleDrop(e, "project")}
-                      onClick={() => document.getElementById("projectInput").click()}
+                      onDrop={(e) => handleDrop(e, 'project')}
+                      onClick={() => document.getElementById('projectInput').click()}
                       className={`border-2 rounded-xl p-6 mb-6 text-center cursor-pointer transition-all
-                        ${dragging ? "border-blue-500 bg-blue-50" : "border-dashed border-gray-300 bg-gray-50"}
+                        ${dragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 bg-gray-50'}
                         hover:shadow-xl hover:border-blue-400`}
                     >
                       <p className="text-gray-600">
                         {projectFile ? (
                           <span className="font-medium text-gray-800">{projectFile.name}</span>
                         ) : (
-                          "Drag & drop or click to upload your project"
+                          'Drag & drop or click to upload your project'
                         )}
                       </p>
                       <input
                         type="file"
                         id="projectInput"
-                        onChange={(e) => handleFileChange(e, "project")}
+                        onChange={(e) => handleFileChange(e, 'project')}
                         className="hidden"
                         accept="application/pdf"
                       />
@@ -326,25 +296,25 @@ const handleUpload = async () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                title: "Cyber Security Risk Management",
+                title: 'Cyber Security Risk Management',
                 description:
-                  "Ideal for teams focused on identifying threats before they strike. Analyze risks and secure your digital assets from unseen vulnerabilities.",
-                route: "/Customer/Risk-Management",
-                key: "CSRM",
+                  'Ideal for teams focused on identifying threats before they strike. Analyze risks and secure your digital assets from unseen vulnerabilities.',
+                route: '/Customer/Risk-Management',
+                key: 'CSRM',
               },
               {
-                title: "Cyber Security Management",
+                title: 'Cyber Security Management',
                 description:
-                  "Perfect for structured teams. Create and enforce policies, manage systems, and build a stable cybersecurity environment.",
-                route: "/Customer/Management",
-                key: "CSM",
+                  'Perfect for structured teams. Create and enforce policies, manage systems, and build a stable cybersecurity environment.',
+                route: '/Customer/Management',
+                key: 'CSM',
               },
               {
-                title: "Both Cyber Security Risk Management and Cyber Security Management",
+                title: 'Both Cyber Security Risk Management and Cyber Security Management',
                 description:
-                  "For visionary organizations: get both strategic and operational security — a full suite of solutions in one unified package.",
-                route: "/Customer/both",
-                key: "Both",
+                  'For visionary organizations: get both strategic and operational security — a full suite of solutions in one unified package.',
+                route: '/Customer/both',
+                key: 'Both',
               },
             ].map(({ title, description, route, key }) => (
               <div
@@ -367,7 +337,7 @@ const handleUpload = async () => {
 
       {/* Footer */}
       <footer className="text-black text-center p-0 m-0">
-        <p>&copy;2025 Information Network Security Administration. All rights reserved.</p>
+        <p>©2025 Information Network Security Administration. All rights reserved.</p>
       </footer>
     </div>
   );

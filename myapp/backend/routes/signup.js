@@ -17,12 +17,13 @@ const generateUserId = async (maxAttempts = 5) => {
 };
 
 router.post('/', async (req, res) => {
-  const {
+  let {
     firstName,
     lastName,
     companyName,
-    email,
-    phone,
+    companyEmail,
+    companyAddress = '',
+    companyPhone,
     password,
     confirmPassword,
     tinNumber,
@@ -31,9 +32,12 @@ router.post('/', async (req, res) => {
     role = 'customer',
   } = req.body;
 
+  // Normalize email early
+  const normalizedEmail = companyEmail?.trim().toLowerCase();
+
   try {
     // Basic required fields validation
-    if (!email || !password || !confirmPassword) {
+    if (!normalizedEmail || !password || !confirmPassword) {
       return res.status(400).json({ message: 'Email, password, and confirmation are required' });
     }
 
@@ -55,8 +59,9 @@ router.post('/', async (req, res) => {
     // Role-specific validation
     if (role === 'customer') {
       if (!companyName) return res.status(400).json({ message: 'Company name is required.' });
-      if (!phone) return res.status(400).json({ message: 'Phone number is required.' });
+      if (!companyPhone) return res.status(400).json({ message: 'Phone number is required.' });
       if (!tinNumber) return res.status(400).json({ message: 'TIN number is required.' });
+
       if (!/^\d+$/.test(tinNumber)) {
         return res.status(400).json({ message: 'TIN number must contain digits only.' });
       }
@@ -67,40 +72,39 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ message: 'Please specify your business type.' });
       }
       if (businessType === 'HSO' && !/^\d+$/.test(otherBusinessType?.trim())) {
-        return res
-          .status(400)
-          .json({ message: 'For HSO, the identifier must be numbers only.' });
+        return res.status(400).json({ message: 'For HSO, the identifier must be numbers only.' });
       }
-      if (businessType === 'TIT' && !emailRegex.test(email?.trim())) {
+      if (businessType === 'TIT' && !emailRegex.test(normalizedEmail)) {
         return res.status(400).json({ message: 'Invalid email format for TIT business type.' });
       }
-      if (businessType === 'SPHONE' && !/^[\d+\-]+$/.test(phone?.trim())) {
+      if (businessType === 'SPHONE' && !/^[\d+\-]+$/.test(companyPhone?.trim())) {
         return res.status(400).json({
           message: 'Phone number can only include digits, +, and -.',
         });
       }
     }
 
-    // Check if user with the same email already exists
-    const existingUser = await User.findOne({ email });
+    // Check if user with the same companyEmail already exists
+    const existingUser = await User.findOne({ companyEmail: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Hash password securely
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate unique userId
-      const userId = uuidv4();
+    const userId = await generateUserId();
 
     // Create new user document
     const newUser = new User({
       userId,
       firstName,
       lastName,
-      organization: companyName || '',
-      email,
-      phone: phone || '',
+      companyName: companyName || '',
+      companyEmail: normalizedEmail,
+      companyAddress: companyAddress || '',
+      companyPhone: companyPhone || '',
       password: hashedPassword,
       tinNumber: tinNumber || '',
       businessType: businessType || '',
@@ -115,7 +119,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json({
       message: 'User created successfully',
       userId: newUser.userId,
-      companyName: newUser.organization,
+      companyName: newUser.companyName,
       role: newUser.role,
     });
   } catch (error) {

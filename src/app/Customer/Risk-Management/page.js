@@ -10,31 +10,14 @@ const View = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/riskmanagement", {
-          credentials: "include",
-        });
-        if (!res.ok) {
-          router.push("/signin");
-          return;
-        }
-        const data = await res.json();
-        setCurrentUserId(data._id);
-      } catch (err) {
-        console.error("Auth check failed", err);
-        router.push("/signin");
-      }
-    };
-
-    fetchUser();
-  }, [router]);
+  // Load currentUserId from localStorage or other source
+ useEffect(() => {
+  const userId = localStorage.getItem("currentUserId"); // <-- Fix key here!
+  if (userId) setCurrentUserId(userId);
+}, []);
 
 
-
-
- const riskCards = [
+  const riskCards = [
     {
       id: 0,
       mainTitle: "CYBER SECURITY RISK MANAGEMENT",
@@ -50,7 +33,7 @@ const View = () => {
       section: "Cyber Security Risk Assessment",
       title: "Tactical Level Risk Assessment",
       description:
-      "Evaluates tactical risks impacting project execution and resource allocation. Enables managers to adapt strategies and optimize operational effectiveness. Cost: up to 1,700,000 ETB.",
+        "Evaluates tactical risks impacting project execution and resource allocation. Enables managers to adapt strategies and optimize operational effectiveness. Cost: up to 1,700,000 ETB.",
       image: "/1.png",
     },
     {
@@ -59,7 +42,7 @@ const View = () => {
       section: "Cyber Security Risk Assessment",
       title: "Operational Level Risk Assessment",
       description:
-      "Focuses on daily operational risks, identifying vulnerabilities and inefficiencies. Supports frontline teams in preventing incidents and maintaining smooth operations. Cost: up to 1,900,000 ETB.",
+        "Focuses on daily operational risks, identifying vulnerabilities and inefficiencies. Supports frontline teams in preventing incidents and maintaining smooth operations. Cost: up to 1,900,000 ETB.",
       image: "/2.png",
     },
     {
@@ -68,7 +51,7 @@ const View = () => {
       section: "Cyber Security Risk Assessment",
       title: "CS Awareness & Cultural Assessment",
       description:
-      "Analyzes staff awareness and organizational culture towards security practices. Aids in improving training programs and fostering risk-aware behaviors. Cost: up to 1,500,000 ETB.",
+        "Analyzes staff awareness and organizational culture towards security practices. Aids in improving training programs and fostering risk-aware behaviors. Cost: up to 1,500,000 ETB.",
       image: "/3.png",
     },
     {
@@ -77,7 +60,7 @@ const View = () => {
       section: "Cyber Security Risk Template",
       title: "Asset Management Template",
       description:
-      "Tracks and profiles critical assets to ensure accurate inventory and protection. Supports efficient resource management and loss prevention efforts. Cost: up to 1,300,000 ETB.",
+        "Tracks and profiles critical assets to ensure accurate inventory and protection. Supports efficient resource management and loss prevention efforts. Cost: up to 1,300,000 ETB.",
       image: "/4.png",
     },
     {
@@ -86,7 +69,7 @@ const View = () => {
       section: "Cyber Security Risk Template",
       title: "Risk Monitoring Dashboard",
       description:
-      "Monitors vulnerabilities and risk indicators continuously for timely detection. Provides real-time insights to help prioritize mitigation actions. Cost: up to 1,800,000 ETB.",
+        "Monitors vulnerabilities and risk indicators continuously for timely detection. Provides real-time insights to help prioritize mitigation actions. Cost: up to 1,800,000 ETB.",
       image: "/5.png",
     },
     {
@@ -95,11 +78,12 @@ const View = () => {
       section: "Cyber Security Risk Template",
       title: "Cyber Security Risk Register Template",
       description:
-      "Maintains records of risks to support compliance and business continuity. Facilitates systematic risk tracking and mitigation planning. Cost: up to 800,000 ETB.",
+        "Maintains records of risks to support compliance and business continuity. Facilitates systematic risk tracking and mitigation planning. Cost: up to 800,000 ETB.",
       image: "/6.png",
     },
   ];
 
+ 
   useEffect(() => {
     localStorage.setItem("riskCards", JSON.stringify(riskCards));
   }, []);
@@ -119,75 +103,72 @@ const View = () => {
     }
   };
 
- 
+  const selectedData = selectedCards.map((id) => {
+    const card = riskCards.find((c) => c.id === id);
+    const costMatch = card?.description.match(/up to ([\d,]+ ETB)/i);
+    return {
+      mainTitle: card?.mainTitle || "",
+      category: card?.section || "",
+      subCategory: card?.title || "",
+      item: { name: card?.title || "", cost: costMatch ? costMatch[1] : "Unknown" },
+      id,
+    };
+  });
 
-    const selectedData = selectedCards.map((id) => {
-      const card = riskCards.find((c) => c.id === id);
-      const costMatch = card?.description.match(/up to ([\d,]+ ETB)/i);
-      return {
-        mainTitle: card?.mainTitle || "",
-        category: card?.section || "",
-        subCategory: card?.title || "",
-        item: { name: card?.title || "", cost: costMatch ? costMatch[1] : "Unknown" },
-        id,
-      };
-    });
+  const grouped = {};
+  selectedData.forEach(({ mainTitle, category, subCategory, item }) => {
+    const key = `${mainTitle}||${category}||${subCategory}`;
+    if (!grouped[key]) grouped[key] = { mainTitle, category, subCategory, items: [] };
+    grouped[key].items.push(item);
+  });
 
-    const grouped = {};
-    selectedData.forEach(({ mainTitle, category, subCategory, item }) => {
-      const key = `${mainTitle}||${category}||${subCategory}`;
-      if (!grouped[key]) grouped[key] = { mainTitle, category, subCategory, items: [] };
-      grouped[key].items.push(item);
-    });
+  const services = Object.values(grouped);
 
-    const services = Object.values(grouped);
- 
-const handleSubmit = async () => {
-  if (!uploadedFile) {
-    alert("Please upload a file before submitting.");
-    return;
-  }
+  const handleSubmit = async () => {
+    if (!uploadedFile) {
+      alert("Please upload a file before submitting.");
+      return;
+    }
 
-const requestId = `GRC/${Math.floor(100000 + Math.random() * 900000)}`;
-console.log("🧾 Generated Request ID:", requestId); // <--- ADD THIS
+    if (!currentUserId) {
+      alert("User not identified. Please log in again.");
+      return;
+    }
 
-  const formData = new FormData();
+    const formData = new FormData();
 
-  formData.append("userId", currentUserId);
-  formData.append("requestId", requestId);
-  formData.append("companyName", localStorage.getItem("companyName"));
-  formData.append("date", new Date().toISOString().split("T")[0]);
-  formData.append("type", "Project");
-  formData.append("status", "Requested");
-  formData.append("services", JSON.stringify(selectedCards));
+    formData.append("userId", currentUserId);
+    formData.append("requestId", requestId);
+formData.append("companyName", localStorage.getItem("organizationName") || "");
+    formData.append("date", new Date().toISOString().split("T")[0]);
+    formData.append("type", "Project");
+    formData.append("status", "Requested");
+    formData.append("services", JSON.stringify(services));
 
-  formData.append("file1", uploadedFile);
-localStorage.setItem("currentUserId", data._id);
+    formData.append("letterFile", uploadedFile);
 
-  try {
-    const response = await axios.post("http://localhost:5000/api/uploads", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-      withCredentials: true,
-    });
-    console.log("Upload response:", response.data);
-    alert("Form submitted!");
-   
-         localStorage.setItem("lastSubmittedRequestId", requestId);
-    router.push("/Customer/Requests?id=" + encodeURIComponent(requestId));
-
-    // >>> Your additional logic goes here <<<
-    // Example: Logging the submitted requestId to localStorage
-    localStorage.setItem("lastSubmittedRequestId", requestId);
-
-  } catch (error) {
-    console.error("Upload failed:", error);
-    alert("Something went wrong. Please try again later.");
-  }
-};
-
-
-
-
+    try {
+      const response = await axios.post("http://localhost:5000/api/requests", formData, {
+        withCredentials: true,
+        // Do NOT set Content-Type header; browser will set it to multipart/form-data
+      });
+      console.log("Upload response:", response.data);
+      alert("Form submitted!");
+      localStorage.setItem("lastSubmittedRequestId", response.data.requestId);
+      router.push("/Customer/Requests?id=" + encodeURIComponent(response.data.requestId));
+    } catch (error) {
+      if (error.response) {
+        console.error("Upload failed response:", error.response);
+        alert(`Upload failed: ${JSON.stringify(error.response.data) || error.message}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("No response from server. Please check your connection.");
+      } else {
+        console.error("Request setup error:", error.message);
+        alert("Something went wrong while preparing your request.");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center">
@@ -270,7 +251,9 @@ localStorage.setItem("currentUserId", data._id);
             </div>
           </div>
           <div className="flex justify-between mt-6">
-            <button className="bg-gray-300 text-black py-2 px-4 rounded hover:bg-gray-400">Cancel</button>
+            <button className="bg-gray-300 text-black py-2 px-4 rounded hover:bg-gray-400" onClick={() => router.back()}>
+              Cancel
+            </button>
             <button
               className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
               onClick={handleSubmit}

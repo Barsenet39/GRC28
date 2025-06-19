@@ -14,8 +14,9 @@ const RequestOverview = () => {
   const [file, setFile] = useState(null);
   const [decision, setDecision] = useState(null);
   const [priority, setPriority] = useState(null);
-  const [commentsText, setCommentsText] = useState('');
+  const [comments, setComments] = useState('');
   const [showSentPopup, setShowSentPopup] = useState(false);
+  const [validationError, setValidationError] = useState(null);
 
   useEffect(() => {
     if (!requestId) {
@@ -23,47 +24,52 @@ const RequestOverview = () => {
       return;
     }
 
-    const fetchRequest = async (retryCount = 3, delay = 1000) => {
-      for (let attempt = 1; attempt <= retryCount; attempt++) {
-        try {
-          const encodedId = encodeURIComponent(requestId);
-          console.log(`📤 Attempt ${attempt}: Fetching request ${requestId} from http://localhost:5000/api/requests/${encodedId}`);
-          const response = await fetch(`http://localhost:5000/api/requests/${encodedId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          });
+    const fetchRequest = async () => {
+      try {
+        const response = await fetch(`/api/requests/${encodeURIComponent(requestId)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-          if (!response.ok) {
-            const text = await response.text();
-            console.error('❌ Raw response:', text.slice(0, 200));
-            if (response.status === 503) {
-              setError('Database unavailable, please try again later');
-              return;
-            }
-            throw new Error(`Failed to fetch request: ${response.status} ${text}`);
-          }
-
-          const data = await response.json();
-          console.log('📥 Received request:', data);
-          setRequest(data);
-          return;
-        } catch (err) {
-          console.error(`❌ Fetch error (attempt ${attempt}):`, err.message);
-          if (attempt === retryCount || err.message.includes('404') || err.message.includes('503')) {
-            setError(err.message);
-            return;
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(`Failed to fetch request: ${response.status} - ${errorData.error || 'Not found'}`);
         }
+
+        const data = await response.json();
+        setRequest(data);
+      } catch (err) {
+        console.error('Fetch error:', err.message);
+        setError(`Unable to load request: ${err.message}`);
+      }
+    };
+
+    const fetchDecision = async () => {
+      try {
+        const response = await fetch(`/api/decisions/${encodeURIComponent(requestId)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok && response.status !== 404) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(`Failed to fetch decision: ${response.status} - ${errorData.error || 'Not found'}`);
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          setDecision(data.status === 'Accepted' ? 'accept' : 'reject');
+          setPriority(data.priority || null);
+          setComments(data.comments || '');
+        }
+      } catch (err) {
+        console.error('Fetch decision error:', err.message);
       }
     };
 
     fetchRequest();
+    fetchDecision();
   }, [requestId]);
-
-  const handleNavigate = () => router.push('/template');
-
-  const handleUploadClick = () => setIsModalOpen(true);
 
   const handleDrop = (event) => {
     event.preventDefault();
@@ -74,54 +80,95 @@ const RequestOverview = () => {
   const handleFileChange = (event) => setFile(event.target.files[0]);
 
   const handleUpload = () => {
-    alert(`Uploaded: ${file.name}`);
-    setIsModalOpen(false);
+    if (file) {
+      console.log(`Uploaded: ${file.name}`);
+      setIsModalOpen(false);
+    }
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleDecisionChange = (e) => setDecision(e.target.value);
+  const handleDecisionChange = (e) => {
+    setDecision(e.target.value);
+    setValidationError(null);
+  };
 
-  const handlePriorityChange = (e) => setPriority(e.target.value);
+  const handlePriorityChange = (e) => {
+    setPriority(e.target.value);
+    setValidationError(null);
+  };
 
-  const handleCommentsChange = (e) => setCommentsText(e.target.value);
+  const handleCommentsChange = (e) => {
+    setComments(e.target.value);
+    setValidationError(null);
+  };
 
   const handleSend = async () => {
+    setValidationError(null);
+
+    if (!decision) {
+      setValidationError('Please select a decision (Accept or Reject)');
+      return;
+    }
+    if (decision === 'accept' && !priority) {
+      setValidationError('Please select a priority (Assurance, BDPD, or Both) for accepted requests');
+      return;
+    }
+    if (!comments.trim()) {
+      setValidationError('Please provide comments');
+      return;
+    }
+
+    const payload = {
+      requestId,
+      status: decision === 'accept' ? 'Accepted' : 'Rejected',
+      priority: decision === 'accept' ? priority : null,
+      comments,
+    };
+    console.log('Submitting decision:', payload);
+
     try {
-      console.log('📤 Sending update for request:', { decision, priority, commentsText });
-      const encodedId = encodeURIComponent(requestId);
-      const response = await fetch(`http://localhost:5000/api/requests/${encodedId}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/decisions', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: decision === 'accept' ? 'Accepted' : 'Rejected',
-          priority: decision === 'accept' ? priority : null,
-          comments: commentsText,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 503) {
-          setError('Database unavailable, please try again later');
-          return;
-        }
-        throw new Error(errorData.error || 'Failed to update request');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Server error response:', errorData);
+        throw new Error(`${errorData.error || 'Failed to save decision'}`);
       }
 
-      const updatedRequest = await response.json();
-      console.log('✅ Updated request:', updatedRequest);
+      const result = await response.json();
+      console.log('Decision submission successful:', result);
       setShowSentPopup(true);
-      setTimeout(() => setShowSentPopup(false), 3000);
+      setTimeout(() => {
+        setShowSentPopup(false);
+        setRequest((prev) => ({
+          ...prev,
+          status: decision === 'accept' ? 'Accepted' : 'Rejected',
+          priority,
+          comments,
+        }));
+      }, 3000);
+      setDecision(null);
+      setPriority(null);
+      setComments('');
     } catch (err) {
-      console.error('❌ Update error:', err.message);
-      setError(err.message);
+      console.error('Submission error:', err.message);
+      setError(`Failed to submit decision: ${err.message}`);
     }
   };
 
   const handleDownload = () => {
     if (!request?.file?.filename) return;
-    alert(`Downloading ${request.file.filename}`);
+    const link = document.createElement('a');
+    link.href = `/documents/${request.file.filename}`;
+    link.download = request.file.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (error) {
@@ -148,8 +195,12 @@ const RequestOverview = () => {
 
       {showSentPopup && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-400 text-white py-2 px-4 rounded-md shadow-md z-50">
-          Sent it!
+          Decision Submitted!
         </div>
+      )}
+
+      {validationError && (
+        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{validationError}</div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -169,6 +220,13 @@ const RequestOverview = () => {
           <p className="text-gray-600 flex items-center mb-1"><FaIdCard className="mr-2 text-yellow-500" /> <strong>Request ID:</strong> {request.requestId}</p>
           <p className="text-gray-600 flex items-center mb-1"><FaCalendarAlt className="mr-2 text-blue-500" /> <strong>Request Date:</strong> {request.date}</p>
           <p className="text-gray-600 flex items-center mb-1"><FaFileAlt className="mr-2 text-gray-500" /> <strong>Request Type:</strong> <span className="text-purple-400">{request.type}</span></p>
+          <p className="text-gray-600 flex items-center mb-1"><FaFileAlt className="mr-2 text-gray-500" /> <strong>Status:</strong> <span className="text-purple-400">{request.status}</span></p>
+          {request.priority && (
+            <p className="text-gray-600 flex items-center mb-1"><FaFileAlt className="mr-2 text-gray-500" /> <strong>Priority:</strong> <span className="text-purple-400">{request.priority}</span></p>
+          )}
+          {request.comments && (
+            <p className="text-gray-600 flex items-center mb-1"><FaFileAlt className="mr-2 text-gray-500" /> <strong>Comments:</strong> <span className="text-purple-400">{request.comments}</span></p>
+          )}
         </div>
       </div>
 
@@ -209,42 +267,70 @@ const RequestOverview = () => {
           <p className="text-gray-600 mb-2">Please select an option:</p>
           <div className="flex items-center mb-3">
             <label className="mr-3 flex items-center">
-              <input type="radio" name="decision" value="accept" className="mr-1" onChange={handleDecisionChange} checked={decision === 'accept'} />
+              <input
+                type="radio"
+                name="decision"
+                value="accept"
+                className="mr-1"
+                onChange={handleDecisionChange}
+                checked={decision === 'accept'}
+              />
               <span className="text-gray-600">Accept</span>
             </label>
             <label className="mr-3 flex items-center">
-              <input type="radio" name="decision" value="reject" className="mr-1" onChange={handleDecisionChange} checked={decision === 'reject'} />
+              <input
+                type="radio"
+                name="decision"
+                value="reject"
+                className="mr-1"
+                onChange={handleDecisionChange}
+                checked={decision === 'reject'}
+              />
               <span className="text-gray-600">Reject</span>
             </label>
           </div>
           <p className="text-gray-600 mb-2">If Accepted, select recipient:</p>
           <div className="flex items-center mb-3">
-            <label className="mr-3 flex items-center">
-              <input type="radio" name="priority" value="Assurance" className="mr-1" onChange={handlePriorityChange} disabled={decision !== 'accept'} checked={priority === 'Assurance'} />
-              <span className="text-gray-600">Assurance</span>
-            </label>
-            <label className="mr-3 flex items-center">
-              <input type="radio" name="priority" value="BDPD" className="mr-1" onChange={handlePriorityChange} disabled={decision !== 'accept'} checked={priority === 'BDPD'} />
-              <span className="text-gray-600">BDPD</span>
-            </label>
-            <label className="mr-3 flex items-center">
-              <input type="radio" name="priority" value="Both" className="mr-1" onChange={handlePriorityChange} disabled={decision !== 'accept'} checked={priority === 'Assurance' || priority === 'BDPD'} />
-              <span className="text-gray-600">Both</span>
-            </label>
+            {['Assurance', 'BDPD', 'Both'].map((value) => (
+              <label key={value} className="mr-3 flex items-center">
+                <input
+                  type="radio"
+                  name="priority"
+                  value={value}
+                  className="mr-1"
+                  onChange={handlePriorityChange}
+                  disabled={decision !== 'accept'}
+                  checked={priority === value}
+                />
+                <span className="text-gray-600">{value}</span>
+              </label>
+            ))}
           </div>
-          <textarea
-            rows="3"
-            className="w-full p-2 border border-gray-300 rounded-md resize-none text-gray-600"
-            placeholder="Add comments here..."
-            value={commentsText}
-            onChange={handleCommentsChange}
-          />
+          <div className="relative">
+            <textarea
+              rows="3"
+              className="w-full p-2 border border-gray-300 rounded-md resize-none text-gray-600"
+              placeholder="Enter comments (required)..."
+              value={comments}
+              onChange={handleCommentsChange}
+            />
+            <span className="absolute top-0 right-2 text-red-500 text-xs">*</span>
+          </div>
           <div className="flex justify-end mt-3">
-            <button className="bg-gray-200 text-gray-600 py-2 px-3 rounded-md hover:bg-gray-300 transition duration-200 mr-2">Cancel</button>
+            <button
+              className="bg-gray-200 text-gray-600 py-2 px-3 rounded-md hover:bg-gray-300 transition duration-200 mr-2"
+              onClick={() => {
+                setDecision(null);
+                setPriority(null);
+                setComments('');
+                setValidationError(null);
+              }}
+            >
+              Cancel
+            </button>
             <button
               className="bg-blue-400 text-white py-2 px-3 rounded-md hover:bg-blue-500 transition duration-200"
               onClick={handleSend}
-              disabled={!decision || (decision === 'accept' && !priority)}
             >
               Send
             </button>
@@ -266,8 +352,18 @@ const RequestOverview = () => {
               {file ? <span className="text-gray-600">{file.name}</span> : <span>Drag & Drop or Click to Upload</span>}
             </div>
             <div className="flex justify-end mt-3">
-              <button className="bg-blue-400 text-white py-2 px-3 rounded-md hover:bg-blue-500 transition duration-200" onClick={handleUpload}>Upload</button>
-              <button className="bg-gray-200 text-gray-600 py-2 px-3 rounded-md hover:bg-gray-300 transition duration-200 ml-2" onClick={handleCloseModal}>Cancel</button>
+              <button
+                className="bg-blue-400 text-white py-2 px-3 rounded-md hover:bg-blue-500 transition duration-200"
+                onClick={handleUpload}
+              >
+                Upload
+              </button>
+              <button
+                className="bg-gray-200 text-gray-600 py-2 px-3 rounded-md hover:bg-gray-300 transition duration-200 ml-2"
+                onClick={handleCloseModal}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -1,207 +1,153 @@
-// File: src/app/Requested/page.js
+'use client'
 
-"use client";
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { FaDownload, FaEye, FaCalendarAlt } from 'react-icons/fa';
 import axios from 'axios';
-
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FaDownload, FaEye, FaCalendarAlt, FaTools, FaFileAlt } from "react-icons/fa";
 
 const View = () => {
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
-const [requests, setRequests] = useState([]);
+  const rawId = searchParams.get('id');
+  const requestId = decodeURIComponent(rawId || '');
 
-  const [riskCards, setRiskCards] = useState([]);
-  const [request, setRequest] = useState(null);
+  const [requestDetails, setRequestDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-  const fetchRequests = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/requests", {
-        withCredentials: true,
-      });
-      setRequests(res.data);
-      localStorage.setItem("requests", JSON.stringify(res.data)); // ✅ Save here
-    } catch (err) {
-      console.error("Failed to fetch user requests:", err);
+    const token = localStorage.getItem('token');
+
+    const fetchRequests = async () => {
+      try {
+        const { data } = await axios.get('http://localhost:5000/api/requests', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const foundRequest = data.find((req) => req.requestId === requestId);
+        if (foundRequest) {
+          setRequestDetails(foundRequest);
+        } else {
+          setError('Request not found.');
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+        setError('Failed to fetch requests.');
+        setLoading(false);
+      }
+    };
+
+    if (requestId) {
+      fetchRequests();
+    } else {
+      setError('Invalid request ID.');
+      setLoading(false);
     }
+  }, [requestId]);
+
+  const handleDownload = (fileName) => {
+    alert(`Downloading: ${fileName}`);
+    // Example real usage:
+    // window.open(`/uploads/${fileName}`, '_blank');
   };
 
-  fetchRequests();
-}, []);
+  const handleView = (fileName) => {
+    window.open(`/uploads/${fileName}`, '_blank');
+  };
 
-
-  useEffect(() => {
-    if (!id) return;
-    const storedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const found = storedRequests.find((r) => r.id === id);
-    setRequest(found || null);
-  }, [id]);
-
-  if (!request) {
-    return <div className="text-center mt-20 text-gray-600 text-lg">Loading request...</div>;
+  if (loading) {
+    return <div className="p-10 text-center text-gray-600">Loading request details...</div>;
   }
 
-  const handleView = (url) => url && window.open(url, "_blank");
-  const handleDownload = (url, fileName) => {
-    if (!url) return;
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName || "file.pdf";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  if (error || !requestDetails) {
+    return <div className="p-10 text-center text-red-600">{error || 'Request details not available.'}</div>;
+  }
 
-  const grouped =
-    Array.isArray(request.services) && request.services.length > 0
-      ? request.services.reduce((acc, svc) => {
-          const { mainTitle, category, subCategory, items } = svc;
-          if (!acc[mainTitle]) acc[mainTitle] = {};
-          if (!acc[mainTitle][category]) acc[mainTitle][category] = [];
-          acc[mainTitle][category].push({ subCategory, cost: items[0]?.cost });
-          return acc;
-        }, {})
-      : {};
+  const services = requestDetails.type === 'Project' ? requestDetails.services || [] : [];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 py-16 px-6 flex justify-center">
-      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-12">
-        {/* Left Section */}
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-6 text-black dark:text-white">Request Details</h1>
-          <div className="bg-white dark:bg-gray-500 rounded-lg p-6 shadow-md">
-            <InfoRow label="Request ID" value={request.id} />
-            <InfoRow
-              label="Request Date"
-              value={
-                <>
-                  <FaCalendarAlt className="inline-block mr-2 text-primary" />
-                  {request.date}
-                </>
-              }
-            />
-            <InfoRow
-              label="Request Type"
-              value={
-                <span
-                  className={`flex items-center font-semibold ${
-                    request.type === "Project" ? "text-orange-500" : "text-green-500"
-                  }`}
-                >
-                  {request.type === "Project" ? (
-                    <FaFileAlt className="inline-block mr-2" />
-                  ) : (
-                    <FaTools className="inline-block mr-2" />
-                  )}
-                  {request.type}
-                </span>
-              }
-            />
-            <InfoRow
-              label="Request Status"
-              value={
-                <span
-                  className={`font-medium ${
-                    request.status === "Requested" ? "text-blue-600" : "text-gray-700"
-                  }`}
-                >
-                  {request.status}
-                </span>
-              }
-            />
-          </div>
+    <div className="min-h-screen bg-white flex flex-col items-center p-8">
+      <div className="bg-white shadow-md p-6 rounded-lg w-full max-w-6xl flex flex-wrap gap-6">
 
-          {/* Files */}
-          <h2 className="text-2xl font-semibold text-black dark:text-white mt-10 mb-3">
-            Request Documents
-          </h2>
-          <div className="bg-gray dark:bg-gray-800 rounded-lg p-4 shadow-md space-y-3">
-            {request.files && Object.entries(request.files).length > 0 ? (
-              Object.entries(request.files).map(([name, url], idx) => {
-                const displayName = name.endsWith(".pdf") ? name : `${name}.pdf`;
-                return (
-                  <div
-                    key={idx}
-                    className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 py-2"
-                  >
-                    <span className="text-black dark:text-white capitalize">
-                      {displayName.replace(/([A-Z])/g, " $1")}
-                    </span>
-                    <div className="flex items-center">
-                      <FaEye
-                        className="text-blue-600 cursor-pointer mr-4 hover:scale-110 transition-transform"
-                        onClick={() => handleView(url)}
-                        aria-label="View Document"
-                      />
-                      <FaDownload
-                        className="text-blue-600 cursor-pointer hover:scale-110 transition-transform"
-                        onClick={() => handleDownload(url, displayName)}
-                        aria-label="Download Document"
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-gray-500">No documents available.</p>
-            )}
-          </div>
-        </div>
+        {/* Left: Request Details */}
+        <div className="flex-1 min-w-[300px]">
+          <h1 className="text-3xl font-semibold mb-4 text-black">Request Details</h1>
 
-      {/* Right Section */}
-<div className="flex-1 px-4 md:px-6">
-  <h2 className="text-3xl font-extrabold mb-4 text-black dark:text-white">Request Services</h2>
-
-  {Object.keys(grouped).length === 0 ? (
-    <p className="text-gray-500 text-base">No services listed for this request.</p>
-  ) : (
-    Object.entries(grouped).map(([mainTitle, categories]) => (
-      <section key={mainTitle} className="mb-8">
-        <h3 className="text-lg font-semibold text-green-600 dark:text-white mb-2 border-b border-gray-300 dark:border-gray-600 pb-1">
-          {mainTitle}
-        </h3>
-
-        {Object.entries(categories).map(([category, services]) => (
-          <div key={category} className="mb-8">
-            <h4 className="text-lg font-semibold text-black dark:text-gray-300 mb-4">
-              {category}
-            </h4>
-
-            <div className="space-y-4">
-              {services.map((svc, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow"
-                >
-                  <span className="text-gray-900 dark:text-gray-100 text-base">{svc.subCategory}</span>
-                  <span className="text-gray-800 dark:text-gray-200 font-semibold text-sm">
-                    {svc.cost}
-                  </span>
-                </div>
-              ))}
+          <div className="mb-6 text-black">
+            <div className="flex justify-between mb-4">
+              <strong className="w-1/3">Request ID:</strong>
+              <span className="w-2/3 text-left">{requestDetails.requestId}</span>
+            </div>
+            <div className="flex justify-between mb-4">
+              <strong className="w-1/3">Request Date:</strong>
+              <span className="w-2/3 text-left flex items-center">
+                <FaCalendarAlt className="mr-1 text-primary" />
+                {requestDetails.date ? new Date(requestDetails.date).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <strong className="w-1/3">Request Type:</strong>
+              <span className="flex items-center w-2/3 text-left">
+                <FaEye className="mr-1 text-orange-500" />
+                {requestDetails.type}
+              </span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <strong className="w-1/3">Request Status:</strong>
+              <span className="w-2/3 text-left">{requestDetails.status}</span>
             </div>
           </div>
-        ))}
-      </section>
-    ))
-  )}
-</div>
 
+          {/* Request Documents */}
+          <h2 className="text-lg font-semibold mt-6 text-black">Request Documents</h2>
 
+          {requestDetails.files?.letterFile && (
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md mt-2">
+              <span className="text-black">{requestDetails.files.letterFile.filename}</span>
+              <div className="flex items-center">
+                <FaEye className="text-blue-600 cursor-pointer mr-2" onClick={() => handleView(requestDetails.files.letterFile.filename)} />
+                <FaDownload className="text-blue-600 cursor-pointer" onClick={() => handleDownload(requestDetails.files.letterFile.filename)} />
+              </div>
+            </div>
+          )}
 
+          {requestDetails.files?.projectFile && (
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md mt-2">
+              <span className="text-black">{requestDetails.files.projectFile.filename}</span>
+              <div className="flex items-center">
+                <FaEye className="text-blue-600 cursor-pointer mr-2" onClick={() => handleView(requestDetails.files.projectFile.filename)} />
+                <FaDownload className="text-blue-600 cursor-pointer" onClick={() => handleDownload(requestDetails.files.projectFile.filename)} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Services */}
+        {requestDetails.type === 'Project' && (
+          <div className="flex-1 min-w-[300px]">
+            <h2 className="text-3xl font-semibold mb-3 text-black">Request Services</h2>
+            {services.map((service, index) => (
+              <div key={index} className="mb-4">
+                <h3 className="font-semibold text-black">{service.category}</h3>
+                <p className="text-black text-sm">{service.subCategory}</p>
+                <ul className="mt-2">
+                  {service.items.map((item, idx) => (
+                    <li key={idx} className="flex justify-between border-b py-2">
+                      <span className="text-black">{item.name}</span>
+                      <span className="text-black font-medium">{item.cost}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-// Helper component to keep Info rows clean
-const InfoRow = ({ label, value }) => (
-  <div className="flex justify-between mb-4">
-    <strong className="w-1/3 text-gray-700 dark:text-gray-300">{label}:</strong>
-    <span className="w-2/3 text-left text-black dark:text-white">{value}</span>
-  </div>
-);
 
 export default View;
